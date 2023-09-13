@@ -188,7 +188,7 @@ AND all(idx in range(0, size(tx)-2)
 RETURN path
 ```
 
-### Finding a *non-node-repeating* cycle with consistent dates *20%*-rule-complying
+### Finding a *20%*-rule-complient *non-node-repeating* cycle with consistent dates
 
 Like what we just did with dates before, we want to compare attributes of consecutive transactions. It fits well in our `all()` list predicate so we will use a `AND` boolean [operator](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_operators) to put this rule inside `WHERE`.  
 
@@ -210,9 +210,11 @@ Our queries run perfectly fine on our sample data but our developper has noticed
 Some other developer :
 
 > "The pattern-matching-based *traverse, produce and filter* approach might not scale if the graph is dense and traversals are deep.
-In some cases, it produces way to many paths!
+In some cases, it produces way to many paths! Look at the PROFILE of the query!
 I think filtering at each traversal step is possible.
 Did you read [this article](https://medium.com/neo4j/getting-from-denmark-hill-to-gatwick-airport-with-quantified-path-patterns-bed38da27ca1), it seems that we can do much better if we leverage Neo4j 5 new features."
+
+![profile](../assets/images/PROFILE_monopartite.png)
 
 Product owner :
 
@@ -270,28 +272,28 @@ CALL db.schema.visualization()
 ### Finding a cycle
 
 In our bipartite model, a fraud ring is a cycle with this shape:
-![qpp1](../assets/images/QPP1.png)
+![qpp](../assets/images/QPP1.png)
 
 It can be drawn as a path ending where it starts.
 
-![qpp1](../assets/images/QPP2.png)
+![qpp](../assets/images/QPP2.png)
 
 The QPP of our query will be a path of repeating patterns *anchored* on both sides on the same node.
 
-![qpp1](../assets/images/QPP3.png)
-![qpp1](../assets/images/QPP4.png)
+![qpp](../assets/images/QPP3.png)
+![qpp](../assets/images/QPP4.png)
 
 In cypher 5.9+, we put the repeating part of the [QPP](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_quantified_path_patterns) between parenthesis.
 
-![qpp1](../assets/images/QPP5.png)
+![qpp](../assets/images/QPP5.png)
 
 And the number of occurrences (`*`, `+`, `{3}`, `{2,6}`...) comes next.
 
-![qpp1](../assets/images/QPP6.png)
+![qpp](../assets/images/QPP6.png)
 
 It almosts translates as is into cypher code.
 
-![qpp1](../assets/images/QPP7.png)
+![qpp](../assets/images/QPP7.png)
 
 We have the *MVP* of ou query:
 
@@ -313,3 +315,44 @@ MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
 WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
 RETURN path
 ```
+
+### Finding a *non-node-repeating* cycle with consistent dates
+
+We now want the dates of the `Transaction` nodes of the cycle to be ordered.
+
+![qpp](../assets/images/QPP8.png)
+
+The main point of the use of QPPs is to be able to filter our graph at traversal time to escape the *traverse, produce and filter* bottleneck.
+So we need to access to consecutive transactions in the repeating part of our QPP.
+Let's reshape it : 
+
+![qpp](../assets/images/QPP9.png)
+![qpp](../assets/images/QPP10.png)
+![qpp](../assets/images/QPP11.png)
+
+It translates into cypher :
+
+```cypher
+MATCH (a:Account)
+MATCH path=(a)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+    ){2,6}
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path
+```
+### Finding a *20%*-rule-complient *non-node-repeating* cycle with consistent dates
+
+![qpp](../assets/images/QPP12.png)
+
+```cypher
+MATCH path=(a:Account)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path
+````
