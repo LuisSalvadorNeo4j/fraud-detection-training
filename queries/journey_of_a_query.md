@@ -330,7 +330,7 @@ Let's reshape it :
 ![qpp](../assets/images/QPP10.png)
 ![qpp](../assets/images/QPP11.png)
 
-It translates into cypher :
+With an inner `WHERE` to express our condition on dates, it translates into cypher :
 
 ```cypher
 MATCH (a:Account)
@@ -344,6 +344,8 @@ RETURN path
 ```
 ### Finding a *20%*-rule-complient *non-node-repeating* cycle with consistent dates
 
+We can add the 20%-rule in a straightforward way inside the WHERE.
+
 ![qpp](../assets/images/QPP12.png)
 
 ```cypher
@@ -355,4 +357,4 @@ MATCH path=(a:Account)<-[:FROM]-(first_tx)
     (last_tx)-[:TO]->(a)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
 RETURN path
-````
+```
