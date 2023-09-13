@@ -14,9 +14,28 @@ To detect these frauds, we have to **find non-repeating chronologically-ordered 
 
 ## Environment
 
+### Creating a Aura Free instance
+
+The first part of this training can be done with a Neo4j Aura Free instance.
+
+Connect to your [Aura Console](https://console.neo4j.io/).
+
+Create an Aura free instance.
+
+Download [this workspace script](./queries_for_aura_workspace.csv) and load it from the *query tab*.
+
+### Alternatively
+
+You can use Neo4j Desktop and create a Neo4j 5.9+ database. Please install APOC and GDS plugin.
+
+
+
 ## First sprint
 
 Let's build a query to find these patterns
+
+
+
 
 ### Data Modeling
 
@@ -24,10 +43,9 @@ Let's build a query to find these patterns
 
 ![Monopartite data model](../assets/images/monopartite_data_model.png)
 
-### clean database
+### inserting sample data
 
-The following queries cleans the database. It should be run in order
-to work from a blank page.
+Let's run this script. It creates 4 accounts and 8 transactions between them from a blank database.
 
 ```cypher
 // WARNING : this erases your data
@@ -35,14 +53,12 @@ CALL apoc.schema.assert({},{});
 MATCH (n)
 CALL {WITH n DETACH DELETE n}
 IN TRANSACTIONS OF 100 ROWS;
-```
 
-```
 // Create all accounts
-CREATE (a1:Account {accountNumber: "1"})
-CREATE (a2:Account {accountNumber: "2"})
-CREATE (a3:Account {accountNumber: "3"})
-CREATE (a4:Account {accountNumber: "4"})
+CREATE (a1:Account {a_id: "1"})
+CREATE (a2:Account {a_id: "2"})
+CREATE (a3:Account {a_id: "3"})
+CREATE (a4:Account {a_id: "4"})
 
 
 // Create relationships between accounts
@@ -53,5 +69,5 @@ CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1
 CREATE (a2)-[:TRANSACTION {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})}]->(a3)
 CREATE (a3)-[:TRANSACTION {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]->(a4)
 CREATE (a4)-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]->(a1)
-CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a2)
+CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a2);
 ```

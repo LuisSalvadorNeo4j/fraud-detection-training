@@ -1,0 +1,163 @@
+name,description,query,id,parentId,isFolder
+Fraud Ring,,,0,,true
+Before Neo4j 5,,,1,0,true
+clean in transactions,,"// WARNING!
+// This drops all the GDS projections from your current database
+//
+//CALL gds.graph.list() YIELD graphName AS toDrop
+//CALL gds.graph.drop(toDrop) YIELD graphName
+//RETURN ""Dropped "" + graphName;
+
+
+// 
+// WARNING! 
+// This DROPs all your indexes and constraints
+//
+CALL apoc.schema.assert({},{});
+
+// WARNING!
+// This erase all your DB content
+//
+MATCH (n)
+CALL {WITH n DETACH DELETE n}
+IN TRANSACTIONS OF 100 ROWS",2,1,false
+Load Data,,"// Create all accounts
+CREATE (a1:Account {a_id: ""1""})
+CREATE (a2:Account {a_id: ""2""})
+CREATE (a3:Account {a_id: ""3""})
+CREATE (a4:Account {a_id: ""4""})
+
+
+// Create relationships between accounts
+CREATE (a1)-[:TRANSACTION {amount: 1000, currency: ""gbp"", date: datetime()-duration({days: 3})}]->(a2)
+CREATE (a2)-[:TRANSACTION {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 810, currency: ""gbp"", date: datetime()-duration({days: 1})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 729, currency: ""gbp"", date: datetime()}]->(a1)
+CREATE (a2)-[:TRANSACTION {amount: 700, currency: ""gbp"", date: datetime()-duration({days: 6})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 978, currency: ""gbp"", date: datetime()-duration({days: 5})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 210, currency: ""gbp"", date: datetime()-duration({days: 4})}]->(a1)
+CREATE (a1)-[:TRANSACTION {amount: 29, currency: ""gbp"", date: datetime()}]->(a2)",3,1,false
+Show Schema,,CALL db.schema.visualization(),4,1,false
+Get constrained node,,"// Get constrained node
+MATCH (n:Account {a_id:""2""})
+RETURN n",5,1,false
+get outgoing tx,,"// Get outgoing tx from node
+MATCH (a:Account {a_id:""2""})-[tx:TRANSACTION]->(n)
+RETURN a, tx, n",6,1,false
+Identify simple transaction ring,,"// Identify simple transaction ring
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
+RETURN path",7,1,false
+No duplicate,,"// no duplicate
+MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
+WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+RETURN path",8,1,false
+Monotonic dates,,"// Monotonic dates
+MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
+WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+AND ALL(idx in range(0, size(tx)-2)
+       WHERE (tx[idx]).date < (tx[idx+1]).date
+   )
+RETURN path",9,1,false
+20% retention at each step,,"MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
+WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+AND ALL(idx in range(0, size(tx)-2)
+       WHERE (tx[idx]).date < (tx[idx+1]).date
+       AND tx[idx].amount >= tx[idx+1].amount >= 0.80 * tx[idx].amount
+   )
+RETURN path",10,1,false
+After Neo4j 5,,,11,0,true
+Refactor to bipartite for QPP,,"// 4.2. Demo Data
+
+// Clean database
+// 
+// WARNING! 
+// This DROPs all your indexes and constraints
+//
+CALL apoc.schema.assert({},{});
+
+// WARNING!
+// This erase all your DB content
+//
+MATCH (n)
+CALL {WITH n DETACH DELETE n}
+IN TRANSACTIONS OF 100 ROWS;
+
+// Create all accounts
+CREATE (a1:Account {a_id: 1})
+CREATE (a2:Account {a_id: 2})
+CREATE (a3:Account {a_id: 3})
+CREATE (a4:Account {a_id: 4})
+
+
+// Create relationships between accounts
+CREATE (a1)<-[:FROM]-(:TRANSACTION {amount: 1000, currency: ""gbp"", date: datetime()-duration({days: 3})})-[:TO]->(a2)
+CREATE (a2)<-[:FROM]-(:TRANSACTION {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:TRANSACTION {amount: 810, currency: ""gbp"", date: datetime()-duration({days: 1})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:TRANSACTION {amount: 729, currency: ""gbp"", date: datetime()})-[:TO]->(a1)
+CREATE (a2)<-[:FROM]-(:TRANSACTION {amount: 700, currency: ""eur"", date: datetime()-duration({days: 6})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:TRANSACTION {amount: 978, currency: ""eur"", date: datetime()-duration({days: 5})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:TRANSACTION {amount: 210, currency: ""eur"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
+CREATE (a1)<-[:FROM]-(:TRANSACTION {amount: 29, currency: ""eur"", date: datetime()})-[:TO]->(a2)",12,11,false
+QPP simple ring,,"MATCH path=(a:Account)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
+RETURN path",13,11,false
+QPP no duplicate,,"MATCH path=(a:Account)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,4}(a)
+WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
+RETURN path",14,11,false
+QPP ↗ dates,,"MATCH path=(a:Account)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+    ){2,6}
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path",15,11,false
+QPP 20% retention,,"// 5.4. Transaction ring with 20% amount deduction
+MATCH path=(a:Account)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path",16,11,false
+long path needle,,"// add long path needle to haystack
+
+// Create all accounts
+MERGE (a1:Account {a_id: ""1""})
+MERGE (a2:Account {a_id: ""2""})
+MERGE (a3:Account {a_id: ""3""})
+MERGE (a4:Account {a_id: ""4""})
+MERGE (a5:Account {a_id: ""5""})
+MERGE (a6:Account {a_id: ""6""})
+MERGE (a7:Account {a_id: ""7""})
+MERGE (a8:Account {a_id: ""8""})
+MERGE (a9:Account {a_id: ""9""})
+MERGE (a10:Account {a_id: ""10""})
+MERGE (a11:Account {a_id: ""11""})
+MERGE (a12:Account {a_id: ""12""})
+MERGE (a13:Account {a_id: ""13""})
+MERGE (a14:Account {a_id: ""14""})
+MERGE (a15:Account {a_id: ""15""})
+MERGE (a16:Account {a_id: ""16""})
+
+// Create relationships between accounts
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: ""gbp"", date: datetime()-duration({days: 20})})-[:TO]->(a2)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 999, currency: ""gbp"", date: datetime()-duration({days: 19})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 998, currency: ""gbp"", date: datetime()-duration({days: 18})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 997, currency: ""gbp"", date: datetime()-duration({days: 17})})-[:TO]->(a5)
+CREATE (a5)<-[:FROM]-(:Transaction {amount: 996, currency: ""gbp"", date: datetime()-duration({days: 16})})-[:TO]->(a6)
+CREATE (a6)<-[:FROM]-(:Transaction {amount: 995, currency: ""gbp"", date: datetime()-duration({days: 15})})-[:TO]->(a7)
+CREATE (a7)<-[:FROM]-(:Transaction {amount: 994, currency: ""gbp"", date: datetime()-duration({days: 14})})-[:TO]->(a8)
+CREATE (a8)<-[:FROM]-(:Transaction {amount: 993, currency: ""gbp"", date: datetime()-duration({days: 13})})-[:TO]->(a9)
+CREATE (a9)<-[:FROM]-(:Transaction {amount: 992, currency: ""gbp"", date: datetime()-duration({days: 12})})-[:TO]->(a10)
+CREATE (a10)<-[:FROM]-(:Transaction {amount: 991, currency: ""gbp"", date: datetime()-duration({days: 11})})-[:TO]->(a11)
+CREATE (a11)<-[:FROM]-(:Transaction {amount: 990, currency: ""gbp"", date: datetime()-duration({days: 10})})-[:TO]->(a12)
+CREATE (a12)<-[:FROM]-(:Transaction {amount: 989, currency: ""gbp"", date: datetime()-duration({days: 9})})-[:TO]->(a13)
+CREATE (a13)<-[:FROM]-(:Transaction {amount: 988, currency: ""gbp"", date: datetime()-duration({days: 8})})-[:TO]->(a14)
+CREATE (a14)<-[:FROM]-(:Transaction {amount: 987, currency: ""gbp"", date: datetime()-duration({days: 7})})-[:TO]->(a15)
+CREATE (a15)<-[:FROM]-(:Transaction {amount: 986, currency: ""gbp"", date: datetime()-duration({days: 6})})-[:TO]->(a16)
+CREATE (a16)<-[:FROM]-(:Transaction {amount: 985, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a1);",17,11,false
+huge path needle,,"WITH 100 AS length
+UNWIND range(1,length) AS ix
+MERGE (a:Account {a_id:toString(ix)})
+MERGE (b:Account {a_id:toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
+CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);",18,11,false
