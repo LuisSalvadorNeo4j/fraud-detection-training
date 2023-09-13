@@ -30,22 +30,17 @@ You can use Neo4j Desktop and create a Neo4j 5.9+ database. Please install APOC 
 
 
 
-## First sprint
-
-Let's build a query to find these patterns
-
-
-
+## First sprint - good old Cypher
 
 ### Data Modeling
 
-> "Monopartite graphs are the way when you're doing deep traversals of your graph." says some skilled cypher dev.
+> "Monopartite graphs are the way when you're doing deep traversal of your graph." says some skilled cypher dev.
 
 ![Monopartite data model](../assets/images/monopartite_data_model.png)
 
-### inserting sample data
+### Inserting sample data
 
-Let's run this script. It creates 4 accounts and 8 transactions between them from a blank database.
+Let's run this script. It creates 4 accounts and 8 transactions between them from a blank database. It will help us build a cypher query.
 
 ```cypher
 // WARNING : this erases your data
@@ -70,4 +65,73 @@ CREATE (a2)-[:TRANSACTION {amount: 700, currency: "gbp", date: datetime()-durati
 CREATE (a3)-[:TRANSACTION {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]->(a4)
 CREATE (a4)-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]->(a1)
 CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a2);
+```
+
+Let's look at the resulting schema.
+
+```cypher
+CALL db.schema.visualization()
+```
+
+### Finding a cycle
+
+#### First: get a node...
+
+```cypher
+// Get some nodes
+MATCH (n:Account)
+RETURN n
+LIMIT 10
+```
+
+```cypher
+// Get a constrained node
+MATCH (n:Account {a_id:"2"})
+RETURN n
+```
+```cypher
+// Get a constrained node (alternative)
+MATCH (n:Account)
+WHERE n.a_id = "2"
+RETURN n
+```
+
+```cypher
+// Get aconstrained node (alternative - inner `WHERE`)
+MATCH (n:Account WHERE n.a_id = "2")
+RETURN n
+```
+
+#### ...then a relationship...
+
+```cypher
+// Get outgoing tx from node
+MATCH (a:Account {a_id:"2"})-[tx:TRANSACTION]->(n)
+RETURN a, tx, n
+```
+
+#### ... then a path ...
+
+```cypher
+// Get outgoing path from a node
+MATCH path = (a:Account {a_id:"2"})-[tx:TRANSACTION*0..3]->(n)
+RETURN path
+LIMIT 10
+```
+
+#### ... any path ...
+
+```cypher
+// Get outgoing path from a node
+MATCH path = (a:Account)-[tx:TRANSACTION*0..3]->(n:Account)
+RETURN path
+LIMIT 10
+```
+
+#### ... finally a cycle
+
+```cypher
+// Identify simple transaction ring
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
+RETURN path
 ```
