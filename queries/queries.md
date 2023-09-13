@@ -135,3 +135,32 @@ LIMIT 10
 MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
 RETURN path
 ```
+
+### Finding a *non-node-repeating* cycle
+
+- We can get the nodes of the path as an array with the function `nodes()`.
+- We can get the size of the array with `size`.
+- We can distribute an array into rows with `UNWIND`.
+- We can aggregate and count rows with `count()`.
+
+We can build a query that filter the path by counting the number of nodes `c_nodes` and compare it to the number of distinct nodes `c_unique_nodes`.
+
+```cypher
+// Identify simple transaction ring
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
+UNWIND nodes(path) AS n
+WITH path, size(nodes(path)) AS c_nodes, n
+WITH DISTINCT path, c_nodes, n
+WITH path, c_nodes, count(n) AS c_unique_nodes
+WHERE c_nodes = c_unique_nodes + 1
+RETURN path
+```
+
+We must admit this query is not concise nor readable. We can use [`APOC`](https://neo4j.com/labs/apoc/5/), Neo4j's standard library to get something more readable.
+
+```cypher
+// no duplicate
+MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
+WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+RETURN path
+```
