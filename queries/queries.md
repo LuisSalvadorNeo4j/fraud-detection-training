@@ -75,6 +75,8 @@ CALL db.schema.visualization()
 
 ### Finding a cycle
 
+Feel free to use [Cypher cheat sheet](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/) as often as you need. Is a great place to find just the information you need about cypher.
+
 #### First: get a node...
 
 ```cypher
@@ -138,12 +140,14 @@ RETURN path
 
 ### Finding a *non-node-repeating* cycle
 
-- We can get the nodes of the path as an array with the function `nodes()`.
-- We can get the size of the array with `size`.
-- We can distribute an array into rows with `UNWIND`.
-- We can aggregate and count rows with `count()`.
+- We can get the nodes of the path as an array with the [path function](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_list_expressions) `nodes()`.
+- We can get the size of the array with the [list function](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_list_expressions) `size`.
+- We can distribute an array into rows with [`UNWIND`](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_unwind).
+- We can remove duplicate rows with `DISTINCT` [operator](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_operators) to get non repeating nodes.
+- We can [aggregate](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_aggregating_functions) and count with `count()`.
+- `GROUP BY` is implicit in cypher. This is not a key-word.
 
-We can build a query that filter the path by counting the number of nodes `c_nodes` and compare it to the number of distinct nodes `c_unique_nodes`.
+We can build a query that filters the path by counting the number of nodes `c_nodes` and comparing it to the number of distinct nodes `c_unique_nodes`.
 
 ```cypher
 // Identify simple transaction ring
@@ -156,11 +160,30 @@ WHERE c_nodes = c_unique_nodes + 1
 RETURN path
 ```
 
-We must admit this query is not concise nor readable. We can use [`APOC`](https://neo4j.com/labs/apoc/5/), Neo4j's standard library to get something more readable.
+We must admit this query is not concise and, worst, not easily readable. We can use [`APOC`](https://neo4j.com/labs/apoc/5/), Neo4j's standard library to get something more human-friendly.
 
 ```cypher
-// no duplicate
+// No duplicate
 MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
 WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+RETURN path
+```
+
+### Finding a *non-node-repeating* cycle with consistent dates
+
+We want increasing transaction dates along our cycle.
+
+- We use `range()`to generate a [list](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_aggregating_functions) of indices.
+- and `all(... WHERE ...)` [list predicate](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_list_expressions) to ensure all elements in a list are `true`.
+
+For each path, it enables us to compare dates of consecutive nodes.
+
+```cypher
+// Monotonic dates
+MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
+WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+AND all(idx in range(0, size(tx)-2)
+       WHERE (tx[idx]).date < (tx[idx+1]).date
+   )
 RETURN path
 ```
