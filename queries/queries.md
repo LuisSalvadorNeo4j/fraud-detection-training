@@ -226,3 +226,90 @@ Product owner :
 
 ![bipartite model](../assets/images/bipartite_data_model.png)
 
+### Inserting sample data
+
+```cypher
+// Clean database
+// 
+// WARNING! 
+// This DROPs all your indexes and constraints
+//
+CALL apoc.schema.assert({},{});
+
+// WARNING!
+// This erase all your DB content
+//
+MATCH (n)
+CALL {WITH n DETACH DELETE n}
+IN TRANSACTIONS OF 100 ROWS;
+
+// Create all accounts
+CREATE (a1:Account {a_id: 1})
+CREATE (a2:Account {a_id: 2})
+CREATE (a3:Account {a_id: 3})
+CREATE (a4:Account {a_id: 4})
+
+
+// Create relationships between accounts
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a2)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: "gbp", date: datetime()})-[:TO]->(a1)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gdp", date: datetime()-duration({days: 6})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gdp", date: datetime()-duration({days: 5})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gdp", date: datetime()-duration({days: 4})})-[:TO]->(a1)
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gdp", date: datetime()})-[:TO]->(a2);
+```
+
+Let's look at the resulting schema.
+
+```cypher
+CALL db.schema.visualization()
+```
+
+### Finding a cycle
+
+In our bipartite model, a fraud ring is a cycle with this shape:
+![qpp1](../assets/images/QPP1.png)
+
+It can be drawn as a path ending where it starts.
+
+![qpp1](../assets/images/QPP2.png)
+
+The QPP of our query will be a path of repeating patterns *anchored* on both sides on the same node.
+
+![qpp1](../assets/images/QPP3.png)
+![qpp1](../assets/images/QPP4.png)
+
+In cypher 5.9+, we put the repeating part of the [QPP](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_quantified_path_patterns) between parenthesis.
+
+![qpp1](../assets/images/QPP5.png)
+
+And the number of occurrences (`*`, `+`, `{3}`, `{2,6}`...) comes next.
+
+![qpp1](../assets/images/QPP6.png)
+
+It almosts translates as is into cypher code.
+
+![qpp1](../assets/images/QPP7.png)
+
+We have the *MVP* of ou query:
+
+```cypher
+MATCH (a:Account)
+MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
+RETURN path
+```
+
+### Finding a *non-node-repeating* cycle
+
+- QPPs enable us to give names to repeating nodes of a pattern and to use them as lists. `nodes()`function is not necessary anymore.
+- `COUNT{}` [subquery expression](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_subquery_expressions) makes the syntax easier.
+We can check nodes are non-repeating in a concise cypher-only self-explanatory way.
+
+```cypher
+MATCH (a:Account)
+MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
+WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
+RETURN path
+```
