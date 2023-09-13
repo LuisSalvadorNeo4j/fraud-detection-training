@@ -187,3 +187,42 @@ AND all(idx in range(0, size(tx)-2)
    )
 RETURN path
 ```
+
+### Finding a *non-node-repeating* cycle with consistent dates *20%*-rule-complying
+
+Like what we just did with dates before, we want to compare attributes of consecutive transactions. It fits well in our `all()` list predicate so we will use a `AND` boolean [operator](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_operators) to put this rule inside `WHERE`.  
+
+```cypher
+MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
+WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
+AND all(idx in range(0, size(tx)-2)
+       WHERE (tx[idx]).date < (tx[idx+1]).date
+       AND tx[idx].amount >= tx[idx+1].amount >= 0.80 * tx[idx].amount
+   )
+RETURN path
+```
+## Review phase
+
+Our queries run perfectly fine on our sample data but our developper has noticed some limitations :
+
+> "I've made some tests on a more realistic [dataset](../data_importer_schema_with_data/importMonopartite10Kaccs100Ktxs.zip) (I've imported it seemlessly with Aura workspace's [data-importer](https://workspace-preview.neo4j.io/workspace/import) - just *open model (with data)* from three-dot menu). And... well... I'm afraid our query doesn't scale well. By the way I even had to put a limit on the length of the path because when there wasn't any, the query was running forever (or until a memory allocation error)."
+
+Some other developer :
+
+> "The pattern-matching-based *traverse, produce and filter* approach might not scale if the graph is dense and traversals are deep.
+In some cases, it produces way to many paths!
+I think filtering at each traversal step is possible.
+Did you read [this article](https://medium.com/neo4j/getting-from-denmark-hill-to-gatwick-airport-with-quantified-path-patterns-bed38da27ca1), it seems that we can do much better if we leverage Neo4j 5 new features."
+
+Product owner :
+
+> "Our products needs real-time fraud detection so we need faster queries. We also need to be able to capture long cycles. This has to be the direction of the next sprint!"
+
+## Second sprint - Neo4j 5 Cypher
+
+### Data Modeling
+
+> "We've identified to opportunities to make our query better. One is using `count{<subquery>}` syntax to get rid of `APOC` dependency. The second one is the use of [`quantified path patterns`](https://neo4j.com/docs/cypher-manual/current/patterns/concepts/#quantified-path-patterns). To get the best out of QPPs, we should refactor our model into a bipartite graph."
+
+![bipartite model](../assets/images/bipartite_data_model.png)
+
