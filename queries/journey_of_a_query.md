@@ -408,3 +408,17 @@ MERGE (a:Account {a_id:toString(ix)})
 MERGE (b:Account {a_id:toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
 CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);
 ```
+
+We can now run our query with no guardrail against 100K+ relationships.
+
+## Review phase
+
+> "Look at the query plan: it's totally different"
+
+![bipartite query profile](../assets/images/PROFILE_bipartite.png)
+
+> "Yes. There is a `Filter` process upstream to the `Repeat` process. As expected. That explains a lot. I suppose it's time to go into production now!"
+
+> "Wait a sec! *says the PO everytime* What about access control ? Should the anti-fraud team see the names and email of an Account node ?"
+
+> "Oops... I guess you're right. There is still work to do."
