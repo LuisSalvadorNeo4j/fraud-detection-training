@@ -337,7 +337,7 @@ MATCH (a:Account)
 MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
-    ){2,6}
+    ){1,6}
     (last_tx)-[:TO]->(a)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
 RETURN path
@@ -353,8 +353,58 @@ MATCH path=(a:Account)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
         AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    ){1,6}
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path
+```
+It's now time to remove the 6 length cap on our cycle.
+We're quite confident.
+
+```cypher
+MATCH path=(a:Account)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
     )+
     (last_tx)-[:TO]->(a)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
 RETURN path
+```
+
+### Test our query
+
+We can clean the database :
+
+```cypher
+// WARNING! 
+// This DROPs all your indexes and constraints
+//
+CALL apoc.schema.assert({},{});
+
+// WARNING!
+// This erase all your DB content
+//
+MATCH (n)
+CALL {WITH n DETACH DELETE n}
+IN TRANSACTIONS OF 100 ROWS
+```
+
+And import a more realistic [dataset](../data_importer_schema_with_data/importBipartite10Kaccs100Ktxs.zip) with the [data-importer](https://workspace-preview.neo4j.io/workspace/import).
+
+Alternatively, you can download the dataset as csv here: 
+- [accounts.csv](../cypher_import/cypher_script_with_data_bipartite/accounts.csv)
+- [txs.csv](../cypher_import/cypher_script_with_data_bipartite/txs.csv)
+
+And then put the files in your `import` directory before ingesting the data with [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher).
+
+
+Let's add a 100-hop cycle needle to our haystack :
+
+```cypher
+WITH 100 AS length
+UNWIND range(1,length) AS ix
+MERGE (a:Account {a_id:toString(ix)})
+MERGE (b:Account {a_id:toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
+CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);
 ```

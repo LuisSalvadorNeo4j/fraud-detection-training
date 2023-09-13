@@ -103,17 +103,17 @@ CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: ""gdp"", date: dateti
 CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: ""gdp"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
 CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",13,12,false
 QPP simple ring,,"MATCH (a:Account)
-MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
+MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){1,6}(a)
 RETURN path",14,12,false
 QPP no duplicate,,"MATCH (a:Account)
-MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
+MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){1,6}(a)
 WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
 RETURN path",15,12,false
 QPP ↗ dates,,"MATCH (a:Account)
 MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
-    ){2,6}
+    ){1,6}
     (last_tx)-[:TO]->(a)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
 RETURN path",16,12,false
