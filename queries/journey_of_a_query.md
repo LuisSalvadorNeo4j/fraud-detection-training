@@ -16,7 +16,7 @@ To detect these frauds, we have to **find non-repeating chronologically-ordered 
 
 ### Creating a Aura Free instance
 
-The first part of this training can be done with a Neo4j Aura Free instance.
+The first part (sprint 1 , sprint 2) of this training can be done with a Neo4j Aura Free instance.
 
 Connect to your [Aura Console](https://console.neo4j.io/).
 
@@ -392,11 +392,7 @@ IN TRANSACTIONS OF 100 ROWS
 
 And import a more realistic [dataset](../data_importer_schema_with_data/importBipartite10Kaccs100Ktxs.zip) with the [data-importer](https://workspace-preview.neo4j.io/workspace/import).
 
-Alternatively, you can download the dataset as csv here: 
-- [accounts.csv](../cypher_import/cypher_script_with_data_bipartite/accounts.csv)
-- [txs.csv](../cypher_import/cypher_script_with_data_bipartite/txs.csv)
-
-And then put the files in your `import` directory before ingesting the data with [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher).
+Alternatively, you can ingest the database by running [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the browser.
 
 
 Let's add a 100-hop cycle needle to our haystack :
@@ -422,3 +418,102 @@ We can now run our query with no guardrail against 100K+ relationships.
 > "Wait a sec! *says the PO everytime* What about access control ? Should the anti-fraud team see the names and email of an Account node ?"
 
 > "Oops... I guess you're right. There is still work to do."
+
+## Third sprint - Role-Based Access-Control
+
+### Environment
+
+Role-Based Access-Control is an Enterprise feature of Neo4j. If you want to follow this sprint hands-on, you'll need to work on Neo4j Enterprise. Neo4j Desktop or a [Blank Sandbox](sandbox.neo4j.com) are convenient.
+
+You can ingest the dataset again if needed by running [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the browser.
+
+```cypher
+// as admin
+CREATE USER Anthony IF NOT EXISTS
+    SET PASSWORD 'password'
+    SET PASSWORD CHANGE NOT REQUIRED
+    SET HOME DATABASE neo4j;
+````
+
+```cypher
+// as admin
+:server disconnect
+```
+
+```cypher
+// as Anthony
+MATCH (a:Account)
+WITH a LIMIT 1
+OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
+RETURN a, r, t
+```
+
+back to admin
+
+```cypher
+// as admin
+SHOW USERS
+```
+
+````cypher
+// as admin
+CREATE ROLE anti_fraud AS COPY OF reader
+```
+
+```cypher
+// as admin
+GRANT ROLE anti_fraud TO Anthony
+```
+
+with Anthony user
+
+```cypher
+// as Anthony
+MATCH (a:Account)
+WITH a LIMIT 1
+OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
+RETURN a, r, t
+```
+
+```cypher
+// as Anthony
+MATCH (a:Account)
+WITH a LIMIT 1
+OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
+RETURN a{.a_id,.name,.email}, CASE type(r) WHEN "FROM" THEN "sent" ELSE "was sent" END , t.amount;
+```
+
+with admin user :
+
+```cypher
+// as admin
+DENY READ {name, email}
+ON HOME GRAPH
+NODES Account TO anti_fraud;
+```
+
+```cypher
+// as admin
+SHOW PRIVILEGES
+WHERE role = "anti_fraud" AND access = "DENIED"
+```
+
+```cypher
+// as Anthony
+MATCH (a:Account)
+WITH a LIMIT 1
+OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
+RETURN a{.a_id,.name,.email}, CASE type(r) WHEN "FROM" THEN "sent" ELSE "was sent" END , t.amount;
+```
+
+```cypher
+// as Anthony
+MATCH path=(a:Account)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path
+```
