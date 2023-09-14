@@ -327,9 +327,51 @@ CALL {
   // SET r.`date` = datetime(row.`date`)
 } IN TRANSACTIONS OF 10000 ROWS;",32,1,false
 Graph Data Science,,,33,,true
+🧹🧹 clean in memory and DB graphs,,"// WARNING!
+// This drops all the GDS projections from your current database
+
+CALL gds.graph.list() YIELD graphName AS toDrop
+CALL gds.graph.drop(toDrop) YIELD graphName
+RETURN ""Dropped "" + graphName;
+
+
+// 
+// WARNING! 
+// This DROPs all your indexes and constraints
+//
+CALL apoc.schema.assert({},{});
+
+// WARNING!
+// This erase all your DB content
+//
+MATCH (n)
+CALL {WITH n DETACH DELETE n}
+IN TRANSACTIONS OF 100 ROWS",34,33,false
 👩‍🔬→👩 Create user with role,,"CREATE USER Daniela IF NOT EXISTS
     SET PASSWORD 'password'
     SET PASSWORD CHANGE NOT REQUIRED
     SET HOME DATABASE neo4j;
 CREATE ROLE data_science IF NOT EXISTS AS COPY OF anti_fraud;
-GRANT ROLE data_science TO Daniela;",34,33,false
+GRANT ROLE data_science TO Daniela;",35,33,false
+🔬Project monopartire into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
+WITH gds.graph.project(
+  'monopartite_account_to_account',
+  source,
+  target,
+  { relationshipProperties: t { .amount } }
+) AS g
+RETURN
+  g.graphName AS graph, g.nodeCount AS nodes, g.relationshipCount AS rels",36,33,false
+🥇Page Rank,,"CALL gds.pageRank.stream('monopartite_account_to_account', {
+  maxIterations: 20,
+  dampingFactor: 0.85,
+  relationshipWeightProperty: 'amount'
+})
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS name, score
+ORDER BY score DESC, name ASC
+LIMIT 10",37,33,false
+🧶 is the graph weekly connected ?,,"CALL gds.wcc.stream('monopartite_account_to_account')
+YIELD nodeId, componentId
+WITH count(DISTINCT componentId) AS wcc_num
+RETURN CASE wcc_num WHEN 1 THEN true ELSE false END AS is_weekly_connected",38,33,false
