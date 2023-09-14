@@ -596,6 +596,6 @@ GRANT ROLE data_science TO Daniela;
 
 There are a lot of [connectors](https://neo4j.com/product/connectors/) and [drivers](https://neo4j.com/developer/language-guides/) we can use with Neo4j. The data scientists could use the Python driver, but there is a transaction management overhead they don't need. The best choice for them is the [GDS Python Client](https://neo4j.com/docs/graph-data-science/current/python-client/).
 
-
+Let's see how to use it from [a Jupyter notebook](../notebooks/data_scientist_connection_to_db.ipynb).
 
 ### Graph Data Science
