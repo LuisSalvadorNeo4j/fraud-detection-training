@@ -449,7 +449,7 @@ CREATE USER Anthony IF NOT EXISTS
 SHOW USERS
 ```
 
-We can now disconnect from our user (with admin role) to log in to the database again as Anthony (user/password connection mode). 
+We can now disconnect from our user (with admin role) to log in to the database again as Anthony (user/password connection mode). In worspace, use the dropdown menu at the top of the screen and *Switch connection*. In Browser, do :
 
 ```cypher
 // as admin
@@ -527,7 +527,7 @@ RETURN a{.a_id, .name, .email},
 
 But wait this should not be visible to the Fraud Detection team. Full reader access is too much privilege."
 
-#### Revoke privilege to `anti_fraud`
+#### Deny privilege to `anti_fraud`
 
 As your admin user:
 
@@ -597,5 +597,7 @@ GRANT ROLE data_science TO Daniela;
 There are a lot of [connectors](https://neo4j.com/product/connectors/) and [drivers](https://neo4j.com/developer/language-guides/) we can use with Neo4j. The data scientists could use the Python driver, but there is a transaction management overhead they don't need. The best choice for them is the [GDS Python Client](https://neo4j.com/docs/graph-data-science/current/python-client/).
 
 Let's see how to use it from [a Jupyter notebook](../notebooks/data_scientist_connection_to_db.ipynb).
+
+> "Is it returning a [pandas](https://pandas.pydata.org/) dataframe? They will love that."
 
 ### Graph Data Science
