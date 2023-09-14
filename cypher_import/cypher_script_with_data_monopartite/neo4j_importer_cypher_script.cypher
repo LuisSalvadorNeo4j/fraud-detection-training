@@ -1,10 +1,6 @@
-:param {
-  // Define the file path root and the individual file names required for loading.
-  // https://neo4j.com/docs/operations-manual/current/configuration/file-locations/
-  file_path_root: 'file:///', // Change this to the folder your script can access the files at.
-  file_0: 'accounts.csv',
-  file_1: 'txs.csv'
-};
+:param  file_path_root => 'https://github.com/halftermeyer/fraud-detection-training/raw/main/cypher_import/cypher_script_with_data_monopartite/';
+:param file_0 => 'accounts.csv';
+:param file_1 => 'txs.csv';
 
 // CONSTRAINT creation
 // -------------------
@@ -16,9 +12,7 @@ CREATE CONSTRAINT `imp_uniq_Account_accountNumber` IF NOT EXISTS
 FOR (n: `Account`)
 REQUIRE (n.`accountNumber`) IS UNIQUE;
 
-:param {
-  idsToSkip: []
-};
+:param idsToSkip => [];
 
 // NODE load
 // ---------
@@ -26,7 +20,7 @@ REQUIRE (n.`accountNumber`) IS UNIQUE;
 // Load nodes in batches, one node label at a time. Nodes will be created using a MERGE statement to ensure a node with the same label and ID property remains unique. Pre-existing nodes found by a MERGE statement will have their other properties set to the latest values encountered in a load file.
 //
 // NOTE: Any nodes with IDs in the 'idsToSkip' list parameter will not be loaded.
-LOAD CSV WITH HEADERS FROM ($file_path_root + $file_0) AS row
+:auto LOAD CSV WITH HEADERS FROM ($file_path_root + $file_0) AS row
 WITH row
 WHERE NOT row.`a_id` IN $idsToSkip AND NOT row.`a_id` IS NULL
 CALL {
@@ -41,7 +35,7 @@ CALL {
 // -----------------
 //
 // Load relationships in batches, one relationship type at a time. Relationships are created using a MERGE statement, meaning only one relationship of a given type will ever be created between a pair of nodes.
-LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
+:auto LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
 WITH row 
 CALL {
   WITH row
