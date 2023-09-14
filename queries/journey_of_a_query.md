@@ -479,7 +479,7 @@ Anthony has PUBLIC role only, which is not enough to see data. We could grant hi
 
 ```cypher
 // as admin
-CREATE ROLE anti_fraud AS COPY OF reader;
+CREATE ROLE anti_fraud IF NOT EXISTS AS COPY OF reader;
 ```
 #### Granting role to user  
 
@@ -506,7 +506,7 @@ RETURN a, r, t
 MATCH (a:Account)
 WITH a LIMIT 1
 OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
-RETURN a{.a_id,.name,.email}, CASE type(r) WHEN "FROM" THEN "sent" ELSE "was sent" END , t.amount;
+RETURN a{.a_id,.name,.email} AS account, CASE type(r) WHEN "FROM" THEN "sent" ELSE "was sent" END AS verb, t.amount AS amount;
 ```
 
 > "[Map projection](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_lists) of a node!! So elegant.
@@ -548,7 +548,6 @@ And test again:
 
 ```cypher
 // as Anthony
-// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
 RETURN a{.a_id, .name, .email},
@@ -574,4 +573,29 @@ RETURN path
 
 And the PO to say:
 
-> "The team can do their job in a secure way. I love that."
+> "The anti-fraud team can do their job in a secure way. I love that! But what about the data scientists? They are quite reluctant to leave their notebooks..."
+
+## Fourth sprint - Graph Data Science
+
+### Data Scientist Environment
+
+#### Role-Based Access Control
+
+> "Let me first create a user for Daniela, our data scientist"; 
+
+```cypher
+CREATE USER Daniela IF NOT EXISTS
+    SET PASSWORD 'password'
+    SET PASSWORD CHANGE NOT REQUIRED
+    SET HOME DATABASE neo4j;
+CREATE ROLE data_science IF NOT EXISTS AS COPY OF anti_fraud;
+GRANT ROLE data_science TO Daniela;
+```
+
+#### Connectors
+
+There are a lot of [connectors](https://neo4j.com/product/connectors/) and [drivers](https://neo4j.com/developer/language-guides/) we can use with Neo4j. The data scientists could use the Python driver, but there is a transaction management overhead they don't need. The best choice for them is the [GDS Python Client](https://neo4j.com/docs/graph-data-science/current/python-client/).
+
+
+
+### Graph Data Science
