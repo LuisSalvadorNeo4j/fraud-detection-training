@@ -143,6 +143,7 @@ RETURN path
 - We can get the nodes of the path as an array with the [path function](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_list_expressions) `nodes()`.
 - We can get the size of the array with the [list function](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_list_expressions) `size`.
 - We can distribute an array into rows with [`UNWIND`](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_unwind).
+- We can project rows on some/new dimensions with [`WITH`](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_lists) and use it to chain parts of a query.
 - We can remove duplicate rows with `DISTINCT` [operator](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_operators) to get non repeating nodes.
 - We can [aggregate](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_aggregating_functions) and count with `count()`.
 - `GROUP BY` is implicit in cypher. This is not a key-word.
@@ -427,6 +428,14 @@ Role-Based Access-Control is an Enterprise feature of Neo4j. If you want to foll
 
 You can ingest the dataset again if needed by running [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the browser.
 
+### Fine-grained RBAC
+
+We can use [cypher commands](https://neo4j.com/docs/cypher-manual/current/administration/access-control/manage-roles/#access-control-role-syntax) to manage the role-based access-control of our database.
+
+#### Creating a user
+
+Let's first create a user: Anthony from Anti-Fraud Team. 
+
 ```cypher
 // as admin
 CREATE USER Anthony IF NOT EXISTS
@@ -437,8 +446,16 @@ CREATE USER Anthony IF NOT EXISTS
 
 ```cypher
 // as admin
+SHOW USERS
+```
+
+We can now disconnect from our user (with admin role) to log in to the database again as Anthony (user/password connection mode). 
+
+```cypher
+// as admin
 :server disconnect
 ```
+Let's try to get some data:
 
 ```cypher
 // as Anthony
@@ -448,24 +465,30 @@ OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
 RETURN a, r, t
 ```
 
-back to admin
+#### Creating a role from a [built-in roles](https://neo4j.com/docs/operations-manual/current/authentication-authorization/built-in-roles/)
+
+Let's connect back as our admin user (with sandbox SSO or with username/password)
+
+We can see the list of user with their roles.
 
 ```cypher
 // as admin
 SHOW USERS
 ```
+Anthony has PUBLIC role only, which is not enough to see data. We could grant him reader built-in role, but let's create a new role that we would be able to set exactly as we want and share with the whole team.
 
-````cypher
+```cypher
 // as admin
-CREATE ROLE anti_fraud AS COPY OF reader
+CREATE ROLE anti_fraud AS COPY OF reader;
 ```
+#### Granting role to user  
 
 ```cypher
 // as admin
 GRANT ROLE anti_fraud TO Anthony
 ```
 
-with Anthony user
+Let's connect again as Anthony to check that we can read some data.
 
 ```cypher
 // as Anthony
@@ -474,6 +497,9 @@ WITH a LIMIT 1
 OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
 RETURN a, r, t
 ```
+
+> "Whoaa! I love the pipe in this query by the way. [Types](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_relationship_patterns) and [labels boolean expressions](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_node_patterns) are awesome."
+
 
 ```cypher
 // as Anthony
@@ -483,7 +509,27 @@ OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
 RETURN a{.a_id,.name,.email}, CASE type(r) WHEN "FROM" THEN "sent" ELSE "was sent" END , t.amount;
 ```
 
-with admin user :
+> "[Map projection](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_lists) of a node!! So elegant.
+
+```cypher
+// as Anthony
+MATCH (a:Account)
+WITH a LIMIT 1
+RETURN a{.a_id, .name, .email},
+    [(a)-[r:TO|FROM]-(t:Transaction) |
+        {role:CASE type(r) WHEN "FROM" THEN "sender" ELSE "beneficiary" END,
+        amount:t.amount}
+    ] AS transactions;
+```
+
+> "And do you like the [pattern comprehension](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_lists) syntax ? It makes it even better imho!"
+
+
+But wait this should not be visible to the Fraud Detection team. Full reader access is too much privilege."
+
+#### Revoke privilege to `anti_fraud`
+
+As your admin user:
 
 ```cypher
 // as admin
@@ -498,13 +544,21 @@ SHOW PRIVILEGES
 WHERE role = "anti_fraud" AND access = "DENIED"
 ```
 
+And test again:
+
 ```cypher
+// as Anthony
 // as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
-OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
-RETURN a{.a_id,.name,.email}, CASE type(r) WHEN "FROM" THEN "sent" ELSE "was sent" END , t.amount;
+RETURN a{.a_id, .name, .email},
+    [(a)-[r:TO|FROM]-(t:Transaction) |
+        {role:CASE type(r) WHEN "FROM" THEN "sender" ELSE "beneficiary" END,
+        amount:t.amount}
+    ] AS transactions;
 ```
+
+> "That's what we want !!"
 
 ```cypher
 // as Anthony
@@ -517,3 +571,7 @@ MATCH path=(a:Account)<-[:FROM]-(first_tx)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
 RETURN path
 ```
+
+And the PO to say:
+
+> "The team can do their job in a secure way. I love that."
