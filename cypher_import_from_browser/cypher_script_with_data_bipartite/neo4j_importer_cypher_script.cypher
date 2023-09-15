@@ -1,4 +1,4 @@
-:param  file_path_root => 'https://github.com/halftermeyer/fraud-detection-training/raw/main/cypher_import/cypher_script_with_data_bipartite/';
+:param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/big/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
 
@@ -23,7 +23,7 @@ REQUIRE (n.`tx_id`) IS UNIQUE;
 // Load nodes in batches, one node label at a time. Nodes will be created using a MERGE statement to ensure a node with the same label and ID property remains unique. Pre-existing nodes found by a MERGE statement will have their other properties set to the latest values encountered in a load file.
 //
 // NOTE: Any nodes with IDs in the 'idsToSkip' list parameter will not be loaded.
-:auto LOAD CSV WITH HEADERS FROM ($file_path_root + $file_0) AS row
+LOAD CSV WITH HEADERS FROM ($file_path_root + $file_0) AS row
 WITH row
 WHERE NOT row.`a_id` IN $idsToSkip AND NOT row.`a_id` IS NULL
 CALL {
@@ -33,7 +33,7 @@ CALL {
   SET n.`email` = row.`email`
 } IN TRANSACTIONS OF 10000 ROWS;
 
-:auto LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
+LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
 WITH row
 WHERE NOT row.`tx_id` IN $idsToSkip AND NOT row.`tx_id` IS NULL
 CALL {
@@ -50,7 +50,7 @@ CALL {
 // -----------------
 //
 // Load relationships in batches, one relationship type at a time. Relationships are created using a MERGE statement, meaning only one relationship of a given type will ever be created between a pair of nodes.
-:auto LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
+LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
 WITH row 
 CALL {
   WITH row
@@ -59,7 +59,7 @@ CALL {
   MERGE (source)-[r: `TO`]->(target)
 } IN TRANSACTIONS OF 10000 ROWS;
 
-:auto LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
+LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
 WITH row 
 CALL {
   WITH row

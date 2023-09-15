@@ -26,9 +26,10 @@ Download [this workspace script](./queries_for_aura_workspace.csv) and load it f
 
 ### Alternatively
 
-You can use Neo4j Desktop and create a Neo4j 5.9+ database. Please install APOC and GDS plugin.
-
-
+You can use Neo4j Desktop and create a Neo4j 5.9+ database.
+- APOC and GDS plugin must be installed
+- This setting file line must not be commented:
+`dbms.security.allow_csv_import_from_file_urls=true`
 
 ## First sprint - good old Cypher
 
