@@ -4,7 +4,7 @@
 
 ## Environment
 
-For a seamless experience, this training should be using [Neo4j Workspace](https://workspace-preview.neo4j.io/). Workspace can be used with any Aura, Sandbox or Desktop instance.
+For a seamless experience, this training should be done using [Neo4j Workspace](https://workspace-preview.neo4j.io/). Workspace can be used with any Aura, Sandbox or Desktop instance.
 
 ### Creating a Aura Free instance
 
