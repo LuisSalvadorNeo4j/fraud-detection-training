@@ -334,27 +334,31 @@ MERGE (a:Account {a_id:toString(ix)})
 MERGE (b:Account {a_id:toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
 CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);",24,12,false
 RBAC,,,25,0,true
+🧹 RBAC,,"DROP ROLE anti_fraud IF EXISTS;
+DROP ROLE data_science IF EXISTS;
+DROP USER Anthony IF EXISTS;
+DROP USER Daniela IF EXISTS;",26,25,false
 👨 create Anti-Fraud User,,"// as admin
 CREATE USER Anthony IF NOT EXISTS
     SET PASSWORD 'password'
     SET PASSWORD CHANGE NOT REQUIRED
-    SET HOME DATABASE neo4j;",26,25,false
+    SET HOME DATABASE neo4j;",27,25,false
 👀 show users,,"// as admin
-SHOW USERS",27,25,false
+SHOW USERS",28,25,false
 🟣→🟢 get some data,,"// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
 OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
-RETURN a, r, t",28,25,false
+RETURN a, r, t",29,25,false
 👮‍♂️ create role anti_fraud,,"// as admin
-CREATE ROLE anti_fraud IF NOT EXISTS AS COPY OF reader;",29,25,false
+CREATE ROLE anti_fraud IF NOT EXISTS AS COPY OF reader;",30,25,false
 👮‍♂️→👨 grant role anti_fraud,,"// as admin
-GRANT ROLE anti_fraud TO Anthony",30,25,false
+GRANT ROLE anti_fraud TO Anthony",31,25,false
 👨 : 🟣→🟢 get some data II,,"// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
 OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
-RETURN a{.a_id,.name,.email} AS account, CASE type(r) WHEN ""FROM"" THEN ""sent"" ELSE ""was sent"" END AS verb, t.amount AS amount;",31,25,false
+RETURN a{.a_id,.name,.email} AS account, CASE type(r) WHEN ""FROM"" THEN ""sent"" ELSE ""was sent"" END AS verb, t.amount AS amount;",32,25,false
 👨 : 🟣→🟢 get some data III,,"// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
@@ -362,14 +366,14 @@ RETURN a{.a_id, .name, .email},
     [(a)-[r:TO|FROM]-(t:Transaction) |
         {role:CASE type(r) WHEN ""FROM"" THEN ""sender"" ELSE ""beneficiary"" END,
         amount:t.amount}
-    ] AS transactions;",32,25,false
+    ] AS transactions;",33,25,false
 👨‍💼 : ¬＠→👮‍♂️ deny PII to anti_fraud,,"// as admin
 DENY READ {name, email}
 ON HOME GRAPH
-NODES Account TO anti_fraud;",33,25,false
+NODES Account TO anti_fraud;",34,25,false
 👀 show anti_fraud DENIED,,"// as admin
 SHOW PRIVILEGES
-WHERE role = ""anti_fraud"" AND access = ""DENIED""",34,25,false
+WHERE role = ""anti_fraud"" AND access = ""DENIED""",35,25,false
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
@@ -420,7 +424,7 @@ CALL {
   // Your script contains the datetime datatype. Our app attempts to convert dates to ISO 8601 date format before passing them to the Cypher function.
   // This conversion cannot be done in a Cypher script load. Please ensure that your CSV file columns are in ISO 8601 date format to ensure equivalent loads.
   // SET r.`date` = datetime(row.`date`)
-} IN TRANSACTIONS OF 10000 ROWS;",35,1,false
+} IN TRANSACTIONS OF 10000 ROWS;",36,1,false
 ⬇ ingest 100K rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/big/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
@@ -471,53 +475,4 @@ CALL {
   // Your script contains the datetime datatype. Our app attempts to convert dates to ISO 8601 date format before passing them to the Cypher function.
   // This conversion cannot be done in a Cypher script load. Please ensure that your CSV file columns are in ISO 8601 date format to ensure equivalent loads.
   // SET r.`date` = datetime(row.`date`)
-} IN TRANSACTIONS OF 10000 ROWS;",36,1,false
-Graph Data Science,,,37,,true
-🧹🧹 clean in memory and DB graphs,,"// WARNING!
-// This drops all the GDS projections from your current database
-
-CALL gds.graph.list() YIELD graphName AS toDrop
-CALL gds.graph.drop(toDrop) YIELD graphName
-RETURN ""Dropped "" + graphName;
-
-
-// 
-// WARNING! 
-// This DROPs all your indexes and constraints
-//
-CALL apoc.schema.assert({},{});
-
-// WARNING!
-// This erase all your DB content
-//
-MATCH (n)
-CALL {WITH n DETACH DELETE n}
-IN TRANSACTIONS OF 100 ROWS",38,37,false
-👩‍🔬→👩 Create user with role,,"CREATE USER Daniela IF NOT EXISTS
-    SET PASSWORD 'password'
-    SET PASSWORD CHANGE NOT REQUIRED
-    SET HOME DATABASE neo4j;
-CREATE ROLE data_science IF NOT EXISTS AS COPY OF anti_fraud;
-GRANT ROLE data_science TO Daniela;",39,37,false
-🔬Project monopartire into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
-WITH gds.graph.project(
-  'monopartite_account_to_account',
-  source,
-  target,
-  { relationshipProperties: t { .amount } }
-) AS g
-RETURN
-  g.graphName AS graph, g.nodeCount AS nodes, g.relationshipCount AS rels",40,37,false
-🥇Page Rank,,"CALL gds.pageRank.stream('monopartite_account_to_account', {
-  maxIterations: 20,
-  dampingFactor: 0.85,
-  relationshipWeightProperty: 'amount'
-})
-YIELD nodeId, score
-RETURN gds.util.asNode(nodeId).name AS name, score
-ORDER BY score DESC, name ASC
-LIMIT 10",41,37,false
-🧶 is the graph weekly connected ?,,"CALL gds.wcc.stream('monopartite_account_to_account')
-YIELD nodeId, componentId
-WITH count(DISTINCT componentId) AS wcc_num
-RETURN CASE wcc_num WHEN 1 THEN true ELSE false END AS is_weekly_connected",42,37,false
+} IN TRANSACTIONS OF 10000 ROWS;",37,1,false
