@@ -384,6 +384,8 @@ RETURN path
 
 ### Test our query
 
+#### Cleaning
+
 We can clean the database :
 
 ```cypher
@@ -399,10 +401,13 @@ MATCH (n)
 CALL {WITH n DETACH DELETE n}
 IN TRANSACTIONS OF 100 ROWS
 ```
+#### Ingestion
 
 And import a more realistic [dataset](../data_importer_schema_with_data/importBipartite10Kaccs100Ktxs.zip) with the [data-importer](https://workspace-preview.neo4j.io/workspace/import).
 
-Alternatively, you can ingest the database by running [this script](../cypher_import_from_browser/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the workspace query tab.
+Alternatively, we can ingest the database by running [this script](../cypher_import_from_browser/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the workspace query tab.
+
+#### Needle in Haystack
 
 Let's add a 100-hop cycle needle to our haystack :
 
@@ -413,6 +418,8 @@ MERGE (a:Account {a_id:toString(ix)})
 MERGE (b:Account {a_id:toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
 CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);
 ```
+
+#### Querying
 
 We can now run our query with no guardrail against 100K+ relationships.
 
