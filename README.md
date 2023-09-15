@@ -12,7 +12,7 @@ This is a Neo4j training in which you will be exposed to:
 
 To do this training, just follow this [tutorial](./queries/fraud_detection_with_neo4j.md).
 
-Queries can be copy from the tutorial to the workspace.
+Queries can be copied from the tutorial to [workspace](https://workspace-preview.neo4j.io/).
 Alternatively, you'll have a better experience downloading this workspace [script](./queries/queries_for_aura_workspace.csv) and load it to the workspace bookmarks sections.
 
 Half of the training (cypher and advance cypher) can be done with an [Aura](https://console.neo4j.io/) Free instance, [Neo4j Desktop](https://neo4j.com/download/) or a blank [Neo4j Sandbox](https://neo4j.com/sandbox/).
