@@ -1,4 +1,4 @@
-# APP Fraud ring detection query
+# APP Fraud ring - a training
 
 ## Introduction
 
