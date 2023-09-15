@@ -482,7 +482,7 @@ CALL {
   // This conversion cannot be done in a Cypher script load. Please ensure that your CSV file columns are in ISO 8601 date format to ensure equivalent loads.
   // SET r.`date` = datetime(row.`date`)
 } IN TRANSACTIONS OF 10000 ROWS;",38,1,false
-Graph Data Science,,,39,,true
+Graph Data Science,,,39,0,true
 🧹🧹 clean in memory and DB graphs,,"// WARNING!
 // This drops all the GDS projections from your current database
 
