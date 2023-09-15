@@ -4,7 +4,7 @@
 
 ## Environment
 
-For a seamless experience, this training should be using [Neo4j Workspace](https://workspace-preview.neo4j.io/). It can connect to any Aura, Sandbox or Desktop instance.
+For a seamless experience, this training should be using [Neo4j Workspace](https://workspace-preview.neo4j.io/). Workspace can be used with any Aura, Sandbox or Desktop instance.
 
 ### Creating a Aura Free instance
 
@@ -23,6 +23,7 @@ Install Neo4j Desktop and create a Neo4j 5.9+ database.
 - APOC and GDS plugin should be installed,
 - This setting file line must not be commented:
 `dbms.security.allow_csv_import_from_file_urls=true`
+- Use `neo4j` schema to connect to `localhost` from workspace. 
 
 ### Alternatively (ii)
 
