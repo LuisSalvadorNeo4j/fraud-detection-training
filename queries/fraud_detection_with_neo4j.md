@@ -37,7 +37,8 @@ A [Blank Sandbox](sandbox.neo4j.com) is convenient for the whole training.
 Queries can be copied from the tutorial to [workspace](https://workspace-preview.neo4j.io/) UI.
 
 Alternatively to the copy/paste approach, you'll have a better experience downloading this workspace [script](./queries/queries_for_aura_workspace.csv) and import it to the workspace bookmarks sections.
-![import bookmarks](./assets/images/import_script.png)
+
+![import bookmarks](../assets/images/import_script.png)
 
 ## Context
 
