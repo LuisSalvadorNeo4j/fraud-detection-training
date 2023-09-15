@@ -8,7 +8,7 @@ For a seamless experience, this training should be done using [Neo4j Workspace](
 
 ### Creating a Aura Free instance
 
-The first part (sprint 1 , sprint 2) only of this training can be done with a Neo4j Aura Free instance.
+The first half (sprint 1 , sprint 2) only of this training can be done with a Neo4j Aura Free instance.
 
 Connect to your [Aura Console](https://console.neo4j.io/).
 
