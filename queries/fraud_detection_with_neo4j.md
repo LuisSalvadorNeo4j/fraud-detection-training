@@ -48,7 +48,7 @@ To detect these frauds, we have to **find non-repeating chronologically-ordered 
 
 ### Inserting sample data
 
-Let's run this script. It creates 4 accounts and 8 transactions between them from a blank database. It will help us build a cypher query.
+Let's run this script. It creates 4 accounts (if not exist) and 8 transactions between them. It will help us build a cypher query.
 
 ```cypher
 // Create all accounts
