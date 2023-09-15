@@ -224,7 +224,7 @@ RETURN path
 ```
 ## Review phase
 
-Our queries run perfectly fine on our sample data but our developper has noticed some limitations :
+Our queries runs perfectly fine on our sample data but our developper has noticed some limitations :
 
 > "I've made some tests on a more realistic [dataset](../data_importer_schema_with_data/importMonopartite10Kaccs100Ktxs.zip) (I've imported it seemlessly with Aura workspace's [data-importer](https://workspace-preview.neo4j.io/workspace/import) - just *open model (with data)* from three-dot menu). And... well... I'm afraid our query doesn't scale well. By the way I even had to put a limit on the length of the path because when there wasn't any, the query was running forever (or until a memory allocation error)."
 
