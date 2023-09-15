@@ -28,7 +28,14 @@ Install Neo4j Desktop and create a Neo4j 5.9+ database.
 ### Alternatively (ii)
 
 A [Blank Sandbox](sandbox.neo4j.com) is convenient for the whole training.
-### Context
+
+## Context
+
+### Credits
+
+This use case is set as in Neo4j Industry [Use Case study](https://neo4j.com/developer/industry-use-cases/finserv/retail-banking/transaction-ring/) and it shows how it was [updated](https://neo4j.com/developer/industry-use-cases/finserv/retail-banking/transaction-ring/transaction-ring-node-version/) to leverage Neo4j 5 new features.
+
+### Use Case
 
 A **transaction fraud ring** refers to a group of people collaborating to engage in fraudulent activities, like transferring funds through multiple accounts. They try to **hide their tracks in the multitude of transactions**, but when you take a step back, you see these **patterns** of people hiding their money flows pop-out again from the regular transactions graphs. These rings work across different locations and employ diverse strategies to evade detection. It is critical for financial organizations to detect these rings, especially with enhancement to the Contingent Reimbursement Model (CRM). One of the fastest-growing scams is the Authorized Push Payment (APP) fraud. In the UK, according to UK Finance, it resulted in a loss of over £249 million in the first half of 2022, a 30% increase compared to the same period in 2020.
 
