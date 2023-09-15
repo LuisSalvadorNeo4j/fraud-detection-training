@@ -23,7 +23,8 @@ Install Neo4j Desktop and create a Neo4j 5.9+ database.
 - APOC and GDS plugin should be installed,
 - This setting file line must not be commented:
 `dbms.security.allow_csv_import_from_file_urls=true`
-- Use `neo4j` schema to connect to `localhost` from workspace. 
+- Use `neo4j` schema to connect to `localhost` from [workspace](https://workspace-preview.neo4j.io/).
+![connect workspace to local db](../assets/images/workspace_connection.png)
 
 ### Alternatively (ii)
 
