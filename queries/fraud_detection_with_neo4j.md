@@ -1,4 +1,4 @@
-# APP Fraud ring - a training
+# APP Fraud ring - A training
 
 ## Introduction
 
