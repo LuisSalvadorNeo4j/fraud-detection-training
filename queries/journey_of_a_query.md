@@ -14,6 +14,8 @@ To detect these frauds, we have to **find non-repeating chronologically-ordered 
 
 ## Environment
 
+For a seamless experience, this training should be using [Neo4j Worspace](https://workspace-preview.neo4j.io/). It can connect to any Aura, Sandbox or Desktop instance.
+
 ### Creating a Aura Free instance
 
 The first part (sprint 1 , sprint 2) of this training can be done with a Neo4j Aura Free instance.
@@ -22,14 +24,20 @@ Connect to your [Aura Console](https://console.neo4j.io/).
 
 Create an Aura free instance.
 
-Download [this workspace script](./queries_for_aura_workspace.csv) and load it from the *query tab*.
+Download [this workspace script](./queries_for_aura_workspace.csv) and load it in the bookmark section.
 
-### Alternatively
+### Alternatively (i)
 
-You can use Neo4j Desktop and create a Neo4j 5.9+ database.
-- APOC and GDS plugin must be installed
+The full training can be done with Neo4j Desktop
+Install Neo4j Desktop and create a Neo4j 5.9+ database.
+- APOC and GDS plugin must be installed,
 - This setting file line must not be commented:
 `dbms.security.allow_csv_import_from_file_urls=true`
+
+### Alternatively (ii)
+
+A [Blank Sandbox](sandbox.neo4j.com) is convenient for the whole training.
+
 
 ## First sprint - good old Cypher
 
@@ -44,17 +52,11 @@ You can use Neo4j Desktop and create a Neo4j 5.9+ database.
 Let's run this script. It creates 4 accounts and 8 transactions between them from a blank database. It will help us build a cypher query.
 
 ```cypher
-// WARNING : this erases your data
-CALL apoc.schema.assert({},{});
-MATCH (n)
-CALL {WITH n DETACH DELETE n}
-IN TRANSACTIONS OF 100 ROWS;
-
 // Create all accounts
-CREATE (a1:Account {a_id: "1"})
-CREATE (a2:Account {a_id: "2"})
-CREATE (a3:Account {a_id: "3"})
-CREATE (a4:Account {a_id: "4"})
+MERGE (a1:Account {a_id: "1"})
+MERGE (a2:Account {a_id: "2"})
+MERGE (a3:Account {a_id: "3"})
+MERGE (a4:Account {a_id: "4"})
 
 
 // Create relationships between accounts
@@ -65,7 +67,7 @@ CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1
 CREATE (a2)-[:TRANSACTION {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})}]->(a3)
 CREATE (a3)-[:TRANSACTION {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]->(a4)
 CREATE (a4)-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]->(a1)
-CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a2);
+CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a2)
 ```
 
 Let's look at the resulting schema.
@@ -248,10 +250,10 @@ CALL {WITH n DETACH DELETE n}
 IN TRANSACTIONS OF 100 ROWS;
 
 // Create all accounts
-CREATE (a1:Account {a_id: 1})
-CREATE (a2:Account {a_id: 2})
-CREATE (a3:Account {a_id: 3})
-CREATE (a4:Account {a_id: 4})
+MERGE (a1:Account {a_id: 1})
+MERGE (a2:Account {a_id: 2})
+MERGE (a3:Account {a_id: 3})
+MERGE (a4:Account {a_id: 4})
 
 
 // Create relationships between accounts
@@ -262,7 +264,7 @@ CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: "gbp", date: datetime
 CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gdp", date: datetime()-duration({days: 6})})-[:TO]->(a3)
 CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gdp", date: datetime()-duration({days: 5})})-[:TO]->(a4)
 CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gdp", date: datetime()-duration({days: 4})})-[:TO]->(a1)
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gdp", date: datetime()})-[:TO]->(a2);
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gdp", date: datetime()})-[:TO]->(a2)
 ```
 
 Let's look at the resulting schema.
@@ -301,6 +303,7 @@ We have the *MVP* of ou query:
 
 ```cypher
 MATCH (a:Account)
+// ◖(◗<-○->◖){2,6}◗
 MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
 RETURN path
 ```
@@ -313,6 +316,7 @@ We can check nodes are non-repeating in a concise cypher-only self-explanatory w
 
 ```cypher
 MATCH (a:Account)
+// ◖(◗<-○->◖){2,6}◗
 MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
 WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
 RETURN path
@@ -336,6 +340,7 @@ With an inner `WHERE` to express our condition on dates, it translates into cyph
 
 ```cypher
 MATCH (a:Account)
+// ○<-◖(◗<-○->◖){2,6}◗->○
 MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
@@ -351,7 +356,9 @@ We can add the 20%-rule in a straightforward way inside the WHERE.
 ![qpp](../assets/images/QPP12.png)
 
 ```cypher
-MATCH path=(a:Account)<-[:FROM]-(first_tx)
+MATCH (a:Account)
+// ○<-◖(◗<-○->◖)+◗->○
+MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
         AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
@@ -364,7 +371,9 @@ It's now time to remove the 6 length cap on our cycle.
 We're quite confident.
 
 ```cypher
-MATCH path=(a:Account)<-[:FROM]-(first_tx)
+MATCH (a:Account)
+// ○<-◖(◗<-○->◖)+◗->○
+MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
         AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
@@ -394,8 +403,7 @@ IN TRANSACTIONS OF 100 ROWS
 
 And import a more realistic [dataset](../data_importer_schema_with_data/importBipartite10Kaccs100Ktxs.zip) with the [data-importer](https://workspace-preview.neo4j.io/workspace/import).
 
-Alternatively, you can ingest the database by running [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the browser.
-
+Alternatively, you can ingest the database by running [this script](../cypher_import_from_browser/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the workspace query tab.
 
 Let's add a 100-hop cycle needle to our haystack :
 
@@ -427,7 +435,7 @@ We can now run our query with no guardrail against 100K+ relationships.
 
 Role-Based Access-Control is an Enterprise feature of Neo4j. If you want to follow this sprint hands-on, you'll need to work on Neo4j Enterprise. Neo4j Desktop or a [Blank Sandbox](sandbox.neo4j.com) are convenient.
 
-You can ingest the dataset again if needed by running [this script](../cypher_import/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the browser.
+You can ingest the dataset again if needed by running [this script](../cypher_import_from_browser/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the query tab.
 
 ### Fine-grained RBAC
 
@@ -560,6 +568,8 @@ RETURN a{.a_id, .name, .email},
 
 > "That's what we want !!"
 
+Even on our sprint 2 query.
+
 ```cypher
 // as Anthony
 MATCH path=(a:Account)<-[:FROM]-(first_tx)
@@ -574,7 +584,7 @@ RETURN path
 
 And the PO to say:
 
-> "The anti-fraud team can do their job in a secure way. I love that! But what about the data scientists? They are quite reluctant to leave their notebooks..."
+> "The anti-fraud team can do their job in a secure way. I love that! But what about the data scientists? They are quite reluctant to leave their notebooks but they want to access our database..."
 
 ## Fourth sprint - Graph Data Science
 
@@ -602,3 +612,71 @@ Let's see how to use it from [a Jupyter notebook](../notebooks/data_scientist_co
 > "Is it returning a [pandas](https://pandas.pydata.org/) dataframe? They will love that."
 
 ### Graph Data Science
+
+The [Graph Data Science](https://neo4j.com/docs/graph-data-science/current/) library of Neo4j enables you to project persisted graphs into memory to run 65+ graph theory algorithms, native ML pipelines and graph vizualisation tools against them, in the most efficient way. They are parallelized and optimized to run at scale.
+
+[Here](https://neo4j.com/docs/graph-data-science/current/algorithms/) is an overview of what GDS can do.
+
+#### Project a monopartite graph
+
+Most graph theory algorithm are meant to run on monopartite and/or bipartite graph.
+
+For instance, from our bipartire model, we can build a monopartite graph called `monopartite_account_to_account` with this cypher projection.
+
+```cypher
+MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
+WITH gds.graph.project(
+  'monopartite_account_to_account',
+  source,
+  target,
+  { relationshipProperties: t { .amount } }
+) AS g
+RETURN
+  g.graphName AS graph, g.nodeCount AS nodes, g.relationshipCount AS rels
+```
+
+They want to know who are the most important accounts of the graph so they built this query :
+
+```cypher
+CALL gds.pageRank.stream('monopartite_account_to_account', {
+  maxIterations: 20,
+  dampingFactor: 0.85,
+  relationshipWeightProperty: 'amount'
+})
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS name, score
+ORDER BY score DESC, name ASC
+LIMIT 10
+```
+
+And they also want to know if there is disconnected *islands* in the graph.
+
+```
+CALL gds.wcc.stream('monopartite_account_to_account')
+YIELD nodeId, componentId
+WITH count(DISTINCT componentId) AS wcc_num
+RETURN CASE wcc_num WHEN 1 THEN true ELSE false END AS is_weekly_connected
+```
+
+We can add a disconnected cycle to the graph with the following query.
+
+```cypher
+WITH 100 AS length
+UNWIND range(1,length) AS ix
+MERGE (a:Account {a_id:"_"+toString(ix)})
+MERGE (b:Account {a_id:"_"+toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
+CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);
+```
+
+You might want to clean in-memory graphs before projecting again.
+
+```cypher
+// WARNING!
+// This drops all the GDS projections from your current database
+
+CALL gds.graph.list() YIELD graphName AS toDrop
+CALL gds.graph.drop(toDrop) YIELD graphName
+RETURN "Dropped " + graphName;
+```
+
+> "Data Scientists got the ball of wool untangled lightning fast!"

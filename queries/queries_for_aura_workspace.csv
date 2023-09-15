@@ -51,25 +51,33 @@ LIMIT 10",7,1,false
 ⭕️ Identify simple transaction ring,,"// Identify simple transaction ring
 MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
 RETURN path",8,1,false
+👯 no duplicate pure cypher,,"// no duplicate pure cypher
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
+UNWIND nodes(path) AS n
+WITH path, size(nodes(path)) AS c_nodes, n
+WITH DISTINCT path, c_nodes, n
+WITH path, c_nodes, count(n) AS c_unique_nodes
+WHERE c_nodes = c_unique_nodes + 1
+RETURN path",9,1,false
 👯 No duplicate,,"// no duplicate
 MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
 WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
-RETURN path",9,1,false
+RETURN path",10,1,false
 🗓️ Monotonic dates,,"// Monotonic dates
 MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
 WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
 AND ALL(idx in range(0, size(tx)-2)
        WHERE (tx[idx]).date < (tx[idx+1]).date
    )
-RETURN path",10,1,false
+RETURN path",11,1,false
 🎯💰 20% retention at each step,,"MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
 WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
 AND ALL(idx in range(0, size(tx)-2)
        WHERE (tx[idx]).date < (tx[idx+1]).date
        AND tx[idx].amount >= tx[idx+1].amount >= 0.80 * tx[idx].amount
    )
-RETURN path",11,1,false
-After Neo4j 5,,,12,0,true
+RETURN path",12,1,false
+After Neo4j 5,,,13,0,true
 🧹 clean in transactions,,"// WARNING!
 // This drops all the GDS projections from your current database
 //
@@ -89,7 +97,7 @@ CALL apoc.schema.assert({},{});
 //
 MATCH (n)
 CALL {WITH n DETACH DELETE n}
-IN TRANSACTIONS OF 100 ROWS",13,12,false
+IN TRANSACTIONS OF 100 ROWS",14,13,false
 ⬇ Refactor to bipartite for QPP,,"// Create all accounts
 MERGE (a1:Account {a_id: 1})
 MERGE (a2:Account {a_id: 2})
@@ -105,29 +113,27 @@ CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: ""gbp"", date: dateti
 CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: ""gdp"", date: datetime()-duration({days: 6})})-[:TO]->(a3)
 CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a4)
 CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: ""gdp"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",14,12,false
-👀 show schema,,CALL db.schema.visualization(),15,12,false
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",15,13,false
+👀 show schema,,CALL db.schema.visualization(),16,13,false
 ⭕️ QPP simple ring,,"// ◖(◗<-○->◖){2,6}◗
 MATCH (a:Account)
 MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
-RETURN path",16,12,false
+RETURN path",17,13,false
 👯 QPP no duplicate,,"MATCH (a:Account)
 // ◖(◗<-○->◖){2,6}◗
 MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
 WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
-RETURN path",17,12,false
-🗓️ QPP ↗ dates,,"// ○
-MATCH (a:Account)
-// ○<-◖(◗<-○->◖){2,6}◗->○
+RETURN path",18,13,false
+🗓️ QPP ↗ dates,,"MATCH (a:Account)
+// ○<-◖(◗<-○->◖){1,6}◗->○
 MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
         WHERE tx_i.date < tx_j.date
-    ){2,6}
+    ){1,6}
     (last_tx)-[:TO]->(a)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
-RETURN path",18,12,false
-🎯💰 QPP 20% retention,,"// ○
-MATCH (a:Account)
+RETURN path",19,13,false
+🎯💰 QPP 20% retention,,"MATCH (a:Account)
 // ○<-◖(◗<-○->◖)+◗->○
 MATCH path=(a)<-[:FROM]-(first_tx)
     ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
@@ -136,7 +142,7 @@ MATCH path=(a)<-[:FROM]-(first_tx)
     )+
     (last_tx)-[:TO]->(a)
 WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
-RETURN path",19,12,false
+RETURN path",20,13,false
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
@@ -205,7 +211,7 @@ CALL {
   MATCH (source: `Transaction` { `tx_id`: row.`tx_id` })
   MATCH (target: `Account` { `a_id`: row.`from_id` })
   MERGE (source)-[r: `FROM`]->(target)
-} IN TRANSACTIONS OF 10000 ROWS;",20,12,false
+} IN TRANSACTIONS OF 10000 ROWS;",21,13,false
 ⬇ ingest 100K rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/big/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
@@ -274,7 +280,7 @@ CALL {
   MATCH (source: `Transaction` { `tx_id`: row.`tx_id` })
   MATCH (target: `Account` { `a_id`: row.`from_id` })
   MERGE (source)-[r: `FROM`]->(target)
-} IN TRANSACTIONS OF 10000 ROWS;",21,12,false
+} IN TRANSACTIONS OF 10000 ROWS;",22,13,false
 🪡 short path needle,,"// Create all accounts
 MERGE (a1:Account {a_id: 1})
 MERGE (a2:Account {a_id: 2})
@@ -290,7 +296,7 @@ CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: ""gbp"", date: dateti
 CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: ""gdp"", date: datetime()-duration({days: 6})})-[:TO]->(a3)
 CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a4)
 CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: ""gdp"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",22,12,false
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",23,13,false
 🪡 long path needle,,"// add long path needle to haystack
 
 // Create all accounts
@@ -327,38 +333,38 @@ CREATE (a12)<-[:FROM]-(:Transaction {amount: 989, currency: ""gbp"", date: datet
 CREATE (a13)<-[:FROM]-(:Transaction {amount: 988, currency: ""gbp"", date: datetime()-duration({days: 8})})-[:TO]->(a14)
 CREATE (a14)<-[:FROM]-(:Transaction {amount: 987, currency: ""gbp"", date: datetime()-duration({days: 7})})-[:TO]->(a15)
 CREATE (a15)<-[:FROM]-(:Transaction {amount: 986, currency: ""gbp"", date: datetime()-duration({days: 6})})-[:TO]->(a16)
-CREATE (a16)<-[:FROM]-(:Transaction {amount: 985, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a1);",23,12,false
+CREATE (a16)<-[:FROM]-(:Transaction {amount: 985, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a1);",24,13,false
 🪡  huge path needle,,"WITH 100 AS length
 UNWIND range(1,length) AS ix
 MERGE (a:Account {a_id:toString(ix)})
 MERGE (b:Account {a_id:toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
-CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);",24,12,false
-RBAC,,,25,0,true
+CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);",25,13,false
+RBAC,,,26,0,true
 🧹 RBAC,,"DROP ROLE anti_fraud IF EXISTS;
 DROP ROLE data_science IF EXISTS;
 DROP USER Anthony IF EXISTS;
-DROP USER Daniela IF EXISTS;",26,25,false
+DROP USER Daniela IF EXISTS;",27,26,false
 👨 create Anti-Fraud User,,"// as admin
 CREATE USER Anthony IF NOT EXISTS
     SET PASSWORD 'password'
     SET PASSWORD CHANGE NOT REQUIRED
-    SET HOME DATABASE neo4j;",27,25,false
+    SET HOME DATABASE neo4j;",28,26,false
 👀 show users,,"// as admin
-SHOW USERS",28,25,false
+SHOW USERS",29,26,false
 🟣→🟢 get some data,,"// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
 OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
-RETURN a, r, t",29,25,false
+RETURN a, r, t",30,26,false
 👮‍♂️ create role anti_fraud,,"// as admin
-CREATE ROLE anti_fraud IF NOT EXISTS AS COPY OF reader;",30,25,false
+CREATE ROLE anti_fraud IF NOT EXISTS AS COPY OF reader;",31,26,false
 👮‍♂️→👨 grant role anti_fraud,,"// as admin
-GRANT ROLE anti_fraud TO Anthony",31,25,false
+GRANT ROLE anti_fraud TO Anthony",32,26,false
 👨 : 🟣→🟢 get some data II,,"// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
 OPTIONAL MATCH (a)-[r:FROM|TO]-(t:Transaction)
-RETURN a{.a_id,.name,.email} AS account, CASE type(r) WHEN ""FROM"" THEN ""sent"" ELSE ""was sent"" END AS verb, t.amount AS amount;",32,25,false
+RETURN a{.a_id,.name,.email} AS account, CASE type(r) WHEN ""FROM"" THEN ""sent"" ELSE ""was sent"" END AS verb, t.amount AS amount;",33,26,false
 👨 : 🟣→🟢 get some data III,,"// as Anthony
 MATCH (a:Account)
 WITH a LIMIT 1
@@ -366,66 +372,15 @@ RETURN a{.a_id, .name, .email},
     [(a)-[r:TO|FROM]-(t:Transaction) |
         {role:CASE type(r) WHEN ""FROM"" THEN ""sender"" ELSE ""beneficiary"" END,
         amount:t.amount}
-    ] AS transactions;",33,25,false
+    ] AS transactions;",34,26,false
 👨‍💼 : ¬＠→👮‍♂️ deny PII to anti_fraud,,"// as admin
 DENY READ {name, email}
 ON HOME GRAPH
-NODES Account TO anti_fraud;",34,25,false
+NODES Account TO anti_fraud;",35,26,false
 👀 show anti_fraud DENIED,,"// as admin
 SHOW PRIVILEGES
-WHERE role = ""anti_fraud"" AND access = ""DENIED""",35,25,false
+WHERE role = ""anti_fraud"" AND access = ""DENIED""",36,26,false
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
-:param file_0 => 'accounts.csv';
-:param file_1 => 'txs.csv';
-
-// CONSTRAINT creation
-// -------------------
-//
-// Create node uniqueness constraints, ensuring no duplicates for the given node label and ID property exist in the database. This also ensures no duplicates are introduced in future.
-//
-// NOTE: The following constraint creation syntax is generated based on the current connected database version 5.12-aura.
-CREATE CONSTRAINT `imp_uniq_Account_a_id` IF NOT EXISTS
-FOR (n: `Account`)
-REQUIRE (n.`a_id`) IS UNIQUE;
-
-:param idsToSkip => [];
-
-// NODE load
-// ---------
-//
-// Load nodes in batches, one node label at a time. Nodes will be created using a MERGE statement to ensure a node with the same label and ID property remains unique. Pre-existing nodes found by a MERGE statement will have their other properties set to the latest values encountered in a load file.
-//
-// NOTE: Any nodes with IDs in the 'idsToSkip' list parameter will not be loaded.
-LOAD CSV WITH HEADERS FROM ($file_path_root + $file_0) AS row
-WITH row
-WHERE NOT row.`a_id` IN $idsToSkip AND NOT row.`a_id` IS NULL
-CALL {
-  WITH row
-  MERGE (n: `Account` { `a_id`: row.`a_id` })
-  SET n.`name` = row.`name`
-  SET n.`email` = row.`email`
-} IN TRANSACTIONS OF 10000 ROWS;
-
-
-// RELATIONSHIP load
-// -----------------
-//
-// Load relationships in batches, one relationship type at a time. Relationships are created using a MERGE statement, meaning only one relationship of a given type will ever be created between a pair of nodes.
-LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
-WITH row 
-CALL {
-  WITH row
-  MATCH (source: `Account` { `a_id`: row.`from_id` })
-  MATCH (target: `Account` { `a_id`: row.`to_id` })
-  MERGE (source)-[r: `TRANSACTION`]->(target)
-  SET r.`tx_id` = row.`tx_id`
-  SET r.`amount` = toFloat(trim(row.`amount`))
-  SET r.`date` = datetime(row.`date`)
-  // Your script contains the datetime datatype. Our app attempts to convert dates to ISO 8601 date format before passing them to the Cypher function.
-  // This conversion cannot be done in a Cypher script load. Please ensure that your CSV file columns are in ISO 8601 date format to ensure equivalent loads.
-  // SET r.`date` = datetime(row.`date`)
-} IN TRANSACTIONS OF 10000 ROWS;",36,1,false
-⬇ ingest 100K rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/big/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
 
@@ -476,3 +431,114 @@ CALL {
   // This conversion cannot be done in a Cypher script load. Please ensure that your CSV file columns are in ISO 8601 date format to ensure equivalent loads.
   // SET r.`date` = datetime(row.`date`)
 } IN TRANSACTIONS OF 10000 ROWS;",37,1,false
+⬇ ingest 100K rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/big/';
+:param file_0 => 'accounts.csv';
+:param file_1 => 'txs.csv';
+
+// CONSTRAINT creation
+// -------------------
+//
+// Create node uniqueness constraints, ensuring no duplicates for the given node label and ID property exist in the database. This also ensures no duplicates are introduced in future.
+//
+// NOTE: The following constraint creation syntax is generated based on the current connected database version 5.12-aura.
+CREATE CONSTRAINT `imp_uniq_Account_a_id` IF NOT EXISTS
+FOR (n: `Account`)
+REQUIRE (n.`a_id`) IS UNIQUE;
+
+:param idsToSkip => [];
+
+// NODE load
+// ---------
+//
+// Load nodes in batches, one node label at a time. Nodes will be created using a MERGE statement to ensure a node with the same label and ID property remains unique. Pre-existing nodes found by a MERGE statement will have their other properties set to the latest values encountered in a load file.
+//
+// NOTE: Any nodes with IDs in the 'idsToSkip' list parameter will not be loaded.
+LOAD CSV WITH HEADERS FROM ($file_path_root + $file_0) AS row
+WITH row
+WHERE NOT row.`a_id` IN $idsToSkip AND NOT row.`a_id` IS NULL
+CALL {
+  WITH row
+  MERGE (n: `Account` { `a_id`: row.`a_id` })
+  SET n.`name` = row.`name`
+  SET n.`email` = row.`email`
+} IN TRANSACTIONS OF 10000 ROWS;
+
+
+// RELATIONSHIP load
+// -----------------
+//
+// Load relationships in batches, one relationship type at a time. Relationships are created using a MERGE statement, meaning only one relationship of a given type will ever be created between a pair of nodes.
+LOAD CSV WITH HEADERS FROM ($file_path_root + $file_1) AS row
+WITH row 
+CALL {
+  WITH row
+  MATCH (source: `Account` { `a_id`: row.`from_id` })
+  MATCH (target: `Account` { `a_id`: row.`to_id` })
+  MERGE (source)-[r: `TRANSACTION`]->(target)
+  SET r.`tx_id` = row.`tx_id`
+  SET r.`amount` = toFloat(trim(row.`amount`))
+  SET r.`date` = datetime(row.`date`)
+  // Your script contains the datetime datatype. Our app attempts to convert dates to ISO 8601 date format before passing them to the Cypher function.
+  // This conversion cannot be done in a Cypher script load. Please ensure that your CSV file columns are in ISO 8601 date format to ensure equivalent loads.
+  // SET r.`date` = datetime(row.`date`)
+} IN TRANSACTIONS OF 10000 ROWS;",38,1,false
+Graph Data Science,,,39,,true
+🧹🧹 clean in memory and DB graphs,,"// WARNING!
+// This drops all the GDS projections from your current database
+
+CALL gds.graph.list() YIELD graphName AS toDrop
+CALL gds.graph.drop(toDrop) YIELD graphName
+RETURN ""Dropped "" + graphName;
+
+
+// 
+// WARNING! 
+// This DROPs all your indexes and constraints
+//
+CALL apoc.schema.assert({},{});
+
+// WARNING!
+// This erase all your DB content
+//
+MATCH (n)
+CALL {WITH n DETACH DELETE n}
+IN TRANSACTIONS OF 100 ROWS",40,39,false
+🧹 GDS-only clean,,"// WARNING!
+// This drops all the GDS projections from your current database
+
+CALL gds.graph.list() YIELD graphName AS toDrop
+CALL gds.graph.drop(toDrop) YIELD graphName
+RETURN ""Dropped "" + graphName;",41,39,false
+👩‍🔬→👩 Create user with role,,"CREATE USER Daniela IF NOT EXISTS
+    SET PASSWORD 'password'
+    SET PASSWORD CHANGE NOT REQUIRED
+    SET HOME DATABASE neo4j;
+CREATE ROLE data_science IF NOT EXISTS AS COPY OF anti_fraud;
+GRANT ROLE data_science TO Daniela;",42,39,false
+🔬 Project monopartire into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
+WITH gds.graph.project(
+  'monopartite_account_to_account',
+  source,
+  target,
+  { relationshipProperties: t { .amount } }
+) AS g
+RETURN
+  g.graphName AS graph, g.nodeCount AS nodes, g.relationshipCount AS rels",43,39,false
+🥇 Page Rank,,"CALL gds.pageRank.stream('monopartite_account_to_account', {
+  maxIterations: 20,
+  dampingFactor: 0.85,
+  relationshipWeightProperty: 'amount'
+})
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS name, score
+ORDER BY score DESC, name ASC
+LIMIT 10",44,39,false
+🧶 is the graph weekly connected ?,,"CALL gds.wcc.stream('monopartite_account_to_account')
+YIELD nodeId, componentId
+WITH count(DISTINCT componentId) AS wcc_num
+RETURN CASE wcc_num WHEN 1 THEN true ELSE false END AS is_weekly_connected",45,39,false
+🏝️ disconnected cycle,,"WITH 100 AS length
+UNWIND range(1,length) AS ix
+MERGE (a:Account {a_id:""_""+toString(ix)})
+MERGE (b:Account {a_id:""_""+toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
+CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);",46,39,false
