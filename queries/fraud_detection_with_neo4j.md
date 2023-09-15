@@ -18,7 +18,7 @@ For a seamless experience, this training should be using [Neo4j Worspace](https:
 
 ### Creating a Aura Free instance
 
-The first part (sprint 1 , sprint 2) of this training can be done with a Neo4j Aura Free instance.
+The first part (sprint 1 , sprint 2) only of this training can be done with a Neo4j Aura Free instance.
 
 Connect to your [Aura Console](https://console.neo4j.io/).
 
@@ -28,9 +28,9 @@ Download [this workspace script](./queries_for_aura_workspace.csv) and load it i
 
 ### Alternatively (i)
 
-The full training can be done with Neo4j Desktop
+The full training can be done with Neo4j Desktop.
 Install Neo4j Desktop and create a Neo4j 5.9+ database.
-- APOC and GDS plugin must be installed,
+- APOC and GDS plugin should be installed,
 - This setting file line must not be commented:
 `dbms.security.allow_csv_import_from_file_urls=true`
 
