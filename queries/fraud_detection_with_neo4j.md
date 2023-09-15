@@ -6,7 +6,9 @@
 
 For a seamless experience, this training should be done using [Neo4j Workspace](https://workspace-preview.neo4j.io/). Workspace can be used with any Aura, Sandbox or Desktop instance.
 
-### Creating a Aura Free instance
+### Instance
+
+#### Alternative 1 - Creating a Aura Free instance
 
 The first half (sprint 1 , sprint 2) only of this training can be done with a Neo4j Aura Free instance.
 
@@ -14,9 +16,7 @@ Connect to your [Aura Console](https://console.neo4j.io/).
 
 Create an Aura free instance.
 
-Download [this workspace script](./queries_for_aura_workspace.csv) and load it in the bookmark section.
-
-### Alternatively (i)
+#### Alternative 1 - Neo4j Desktop
 
 The full training can be done with Neo4j Desktop.
 Install Neo4j Desktop and create a Neo4j 5.9+ database.
@@ -26,9 +26,16 @@ Install Neo4j Desktop and create a Neo4j 5.9+ database.
 - Use `neo4j` schema to connect to `localhost` from [workspace](https://workspace-preview.neo4j.io/).
 ![connect workspace to local db](../assets/images/workspace_connection.png)
 
-### Alternatively (ii)
+#### Alternative 3 - Neo4j Sandbox
 
 A [Blank Sandbox](sandbox.neo4j.com) is convenient for the whole training.
+
+### Queries
+
+Queries can be copied from the tutorial to [workspace](https://workspace-preview.neo4j.io/) UI we recommend to use whatever the environment.
+
+Alternatively to the copy/paste approach, you'll have a better experience downloading this workspace [script](./queries/queries_for_aura_workspace.csv) and import it to the workspace bookmarks sections.
+![import bookmarks](./assets/images/import_script.png)
 
 ## Context
 
