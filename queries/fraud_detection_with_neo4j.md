@@ -18,7 +18,7 @@ Connect to your [Aura Console](https://console.neo4j.io/).
 
 Create an Aura free instance.
 
-#### Alternative 1 - Neo4j Desktop
+#### Alternative 2 - Neo4j Desktop
 
 The full training can be done with Neo4j Desktop.
 Install Neo4j Desktop and create a Neo4j 5.9+ database.
