@@ -546,10 +546,10 @@ YIELD nodeId, score
 RETURN gds.util.asNode(nodeId).name AS name, score
 ORDER BY score DESC, name ASC
 LIMIT 10",45,40,false
-🧶 is the graph weekly connected ?,,"CALL gds.wcc.stream('monopartite_account_to_account')
+🧶 is the graph weakly connected ?,,"CALL gds.wcc.stream('monopartite_account_to_account')
 YIELD nodeId, componentId
 WITH count(DISTINCT componentId) AS wcc_num
-RETURN CASE wcc_num WHEN 1 THEN true ELSE false END AS is_weekly_connected",46,40,false
+RETURN CASE wcc_num WHEN 1 THEN true ELSE false END AS is_weakly_connected",46,40,false
 🏝️ disconnected cycle,,"WITH 100 AS length
 UNWIND range(1,length) AS ix
 MERGE (a:Account {a_id:""_""+toString(ix)})

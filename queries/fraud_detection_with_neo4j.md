@@ -30,13 +30,13 @@ Install Neo4j Desktop and create a Neo4j 5.9+ database.
 
 #### Alternative 3 - Neo4j Sandbox
 
-A [Blank Sandbox](sandbox.neo4j.com) is convenient for the whole training.
+A [Blank Sandbox](http://sandbox.neo4j.com) is convenient for the whole training.
 
 ### Queries
 
 Queries can be copied from the tutorial to [workspace](https://workspace-preview.neo4j.io/) UI.
 
-Alternatively to the copy/paste approach, you'll have a better experience downloading this workspace [script](./queries/queries_for_aura_workspace.csv) and importing it to the workspace bookmarks sections.
+Alternatively to the copy/paste approach, you'll have a better experience downloading this workspace [script](./queries_for_aura_workspace.csv) and importing it to the workspace bookmarks sections.
 
 ![import bookmarks](../assets/images/import_script.png)
 
@@ -645,7 +645,7 @@ The [Graph Data Science](https://neo4j.com/docs/graph-data-science/current/) lib
 
 Most graph theory algorithm are meant to run on monopartite and/or bipartite graph.
 
-For instance, from our bipartire model, we can build a monopartite graph called `monopartite_account_to_account` with this cypher projection.
+For instance, from our bipartite model, we can build a monopartite graph called `monopartite_account_to_account` with this cypher projection.
 
 ```cypher
 MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
