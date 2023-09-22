@@ -233,7 +233,7 @@ Some other developer :
 > "The pattern-matching-based *traverse, produce and filter* approach might not scale if the graph is dense and traversals are deep.
 In some cases, it produces way to many paths! Look at the PROFILE of the query!
 I think filtering at each traversal step is possible.
-Did you read [this article](https://medium.com/neo4j/getting-from-denmark-hill-to-gatwick-airport-with-quantified-path-patterns-bed38da27ca1), it seems that we can do much better if we leverage Neo4j 5 new features."
+Did you read [this article](https://medium.com/neo4j/getting-from-denmark-hill-to-gatwick-airport-with-quantified-path-patterns-bed38da27ca1) and [this other one](https://medium.com/neo4j/did-you-take-the-neo4j-5-cypher-bullet-train-6a857c92d669), it seems that we can do much better if we leverage Neo4j 5 new features."
 
 ![profile](../assets/images/PROFILE_monopartite.png)
 
