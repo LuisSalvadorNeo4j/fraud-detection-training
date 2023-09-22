@@ -7,6 +7,7 @@ This is a Neo4j training in which you will be exposed to:
 - some basic cypher
 - more advanced cypher capabilities
 - ingestion
+- role based access control
 - connectors
 - Graph Data Science
 
