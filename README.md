@@ -13,7 +13,7 @@ This is a Neo4j training in which you will be exposed to:
 
 To do this training, just follow this [tutorial](./queries/fraud_detection_with_neo4j.md).
 
-Queries can be copied from the tutorial to [workspace](https://workspace-preview.neo4j.io/) UI we recommend to use whatever the environment.
+Queries can be copied from the tutorial to the Neo4j[workspace](https://workspace-preview.neo4j.io/) UI (we recommend to use this UI whatever the environment).
 
 Alternatively to the copy/paste approach, you'll have a better experience downloading this workspace [script](./queries/queries_for_aura_workspace.csv) and importing it to the workspace bookmarks sections.
 
