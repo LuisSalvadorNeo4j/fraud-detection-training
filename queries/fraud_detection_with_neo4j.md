@@ -400,7 +400,7 @@ WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] +
 RETURN path
 ```
 
-### Test our query
+### Testing our query
 
 #### Cleaning
 
