@@ -120,7 +120,7 @@ CALL {
   WITH row
   MATCH (source: `Account` { `a_id`: row.`from_id` })
   MATCH (target: `Account` { `a_id`: row.`to_id` })
-  MERGE (source)-[r: `TRANSACTION`]->(target)
+  CREATE (source)-[r: `TRANSACTION`]->(target)
   SET r.`tx_id` = row.`tx_id`
   SET r.`amount` = toFloat(trim(row.`amount`))
   SET r.`date` = datetime(row.`date`)
@@ -171,7 +171,7 @@ CALL {
   WITH row
   MATCH (source: `Account` { `a_id`: row.`from_id` })
   MATCH (target: `Account` { `a_id`: row.`to_id` })
-  MERGE (source)-[r: `TRANSACTION`]->(target)
+  CREATE (source)-[r: `TRANSACTION`]->(target)
   SET r.`tx_id` = row.`tx_id`
   SET r.`amount` = toFloat(trim(row.`amount`))
   SET r.`date` = datetime(row.`date`)
