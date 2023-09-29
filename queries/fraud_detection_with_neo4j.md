@@ -345,7 +345,7 @@ We now want the dates of the `Transaction` nodes of the cycle to be ordered.
 
 ![qpp](../assets/images/QPP8.png)
 
-The main point of the use of QPPs is to be able to filter our graph at traversal time to escape the *traverse, produce and filter* bottleneck.
+The main point of the use of QPPs is to be able to filter our graph at traversal time in order to escape the *traverse, produce and filter* bottleneck.
 So we need to access to consecutive transactions in the repeating part of our QPP.
 Let's reshape it : 
 
