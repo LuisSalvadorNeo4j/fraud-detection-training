@@ -528,7 +528,7 @@ RETURN ""Dropped "" + graphName;",42,40,false
     SET HOME DATABASE neo4j;
 CREATE ROLE data_science IF NOT EXISTS AS COPY OF anti_fraud;
 GRANT ROLE data_science TO Daniela;",43,40,false
-🔬 Project monopartire into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
+🔬 Project monopartite into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
 WITH gds.graph.project(
   'monopartite_account_to_account',
   source,
