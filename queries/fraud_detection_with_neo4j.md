@@ -226,7 +226,7 @@ RETURN path
 
 Our queries runs perfectly fine on our sample data but our developper has noticed some limitations :
 
-> "I've made some tests on a more realistic [dataset](../data_importer_schema_with_data/importMonopartite10Kaccs100Ktxs.zip) (I've imported it seemlessly with Aura workspace's [data-importer](https://workspace-preview.neo4j.io/workspace/import) - just *open model (with data)* from three-dot menu). And... well... I'm afraid our query doesn't scale well. By the way I even had to put a limit on the length of the path because when there wasn't any, the query was running forever (or until a memory allocation error)."
+> "I've made some tests on a more realistic [dataset](../data_importer_schema_with_data/importMonopartite10Kaccs100Ktxs.zip) (I've imported it seemlessly with Aura workspace's [data-importer](https://workspace-preview.neo4j.io/workspace/import) - just *open model (with data)* from three-dot menu). And... well... I'm afraid our query doesn't scale well. By the way I even had to put a limit on the length of the path because when there was none, the query was running forever (or until a memory allocation error)."
 
 Some other developer :
 
@@ -345,8 +345,8 @@ We now want the dates of the `Transaction` nodes of the cycle to be ordered.
 
 ![qpp](../assets/images/QPP8.png)
 
-The main point of the use of QPPs is to be able to filter our graph at traversal time to escape the *traverse, produce and filter* bottleneck.
-So we need to access to consecutive transactions in the repeating part of our QPP.
+The main point of the use of QPPs is to be able to filter our graph at traversal time in order to escape the *traverse, produce and filter* bottleneck.
+So we need to access two consecutive transactions in the repeating part of our QPP.
 Let's reshape it : 
 
 ![qpp](../assets/images/QPP9.png)
@@ -400,7 +400,7 @@ WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] +
 RETURN path
 ```
 
-### Test our query
+### Testing our query
 
 #### Cleaning
 
