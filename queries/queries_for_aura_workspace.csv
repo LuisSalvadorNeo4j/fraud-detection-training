@@ -120,7 +120,7 @@ CALL {
   WITH row
   MATCH (source: `Account` { `a_id`: row.`from_id` })
   MATCH (target: `Account` { `a_id`: row.`to_id` })
-  MERGE (source)-[r: `TRANSACTION`]->(target)
+  CREATE (source)-[r: `TRANSACTION`]->(target)
   SET r.`tx_id` = row.`tx_id`
   SET r.`amount` = toFloat(trim(row.`amount`))
   SET r.`date` = datetime(row.`date`)
@@ -171,7 +171,7 @@ CALL {
   WITH row
   MATCH (source: `Account` { `a_id`: row.`from_id` })
   MATCH (target: `Account` { `a_id`: row.`to_id` })
-  MERGE (source)-[r: `TRANSACTION`]->(target)
+  CREATE (source)-[r: `TRANSACTION`]->(target)
   SET r.`tx_id` = row.`tx_id`
   SET r.`amount` = toFloat(trim(row.`amount`))
   SET r.`date` = datetime(row.`date`)
@@ -216,48 +216,6 @@ CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: ""gdp"", date: dateti
 CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a4)
 CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: ""gdp"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
 CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",17,15,false
-👀 show schema,,CALL db.schema.visualization(),18,15,false
-⭕️ QPP simple ring,,"// ◖(◗<-○->◖){2,6}◗
-MATCH (a:Account)
-MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
-RETURN path",19,15,false
-👯 QPP no duplicate,,"MATCH (a:Account)
-// ◖(◗<-○->◖){2,6}◗
-MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
-WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
-RETURN path",20,15,false
-🗓️ QPP ↗ dates,,"MATCH (a:Account)
-// ○<-◖(◗<-○->◖){1,6}◗->○
-MATCH path=(a)<-[:FROM]-(first_tx)
-    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
-        WHERE tx_i.date < tx_j.date
-    ){1,6}
-    (last_tx)-[:TO]->(a)
-WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
-RETURN path",21,15,false
-🎯💰 QPP 20% retention,,"MATCH (a:Account)
-// ○<-◖(◗<-○->◖)+◗->○
-MATCH path=(a)<-[:FROM]-(first_tx)
-    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
-        WHERE tx_i.date < tx_j.date
-        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
-    )+
-    (last_tx)-[:TO]->(a)
-WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
-RETURN path",22,15,false
-ALT 🎯💰 QPP 20% retention,,"// ◗->○<-◖
-MATCH (last_tx)-[:TO]->(a:Account)<-[r:FROM]-(first_tx)
-// ◖
-//  (◗<-○->◖)+
-// ◗
-MATCH path=(first_tx)
-    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
-        WHERE tx_i.date < tx_j.date
-        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
-    )+
-    (last_tx)
-WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
-RETURN path",23,15,false
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
@@ -326,7 +284,7 @@ CALL {
   MATCH (source: `Transaction` { `tx_id`: row.`tx_id` })
   MATCH (target: `Account` { `a_id`: row.`from_id` })
   MERGE (source)-[r: `FROM`]->(target)
-} IN TRANSACTIONS OF 10000 ROWS;",24,15,false
+} IN TRANSACTIONS OF 10000 ROWS;",18,15,false
 ⬇ ingest 100K rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/big/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
@@ -395,7 +353,49 @@ CALL {
   MATCH (source: `Transaction` { `tx_id`: row.`tx_id` })
   MATCH (target: `Account` { `a_id`: row.`from_id` })
   MERGE (source)-[r: `FROM`]->(target)
-} IN TRANSACTIONS OF 10000 ROWS;",25,15,false
+} IN TRANSACTIONS OF 10000 ROWS;",19,15,false
+👀 show schema,,CALL db.schema.visualization(),20,15,false
+⭕️ QPP simple ring,,"// ◖(◗<-○->◖){2,6}◗
+MATCH (a:Account)
+MATCH path=(a)(()<-[:FROM]-()-[:TO]->()){2,6}(a)
+RETURN path",21,15,false
+👯 QPP no duplicate,,"MATCH (a:Account)
+// ◖(◗<-○->◖){2,6}◗
+MATCH path=(a)((a_i)<-[:FROM]-(tx)-[:TO]->(a_j)){2,6}(a)
+WHERE COUNT { WITH a_i UNWIND a_i AS b RETURN DISTINCT b } = size(a_i)
+RETURN path",22,15,false
+🗓️ QPP ↗ dates,,"MATCH (a:Account)
+// ○<-◖(◗<-○->◖){1,6}◗->○
+MATCH path=(a)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+    ){1,6}
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path",23,15,false
+🎯💰 QPP 20% retention,,"MATCH (a:Account)
+// ○<-◖(◗<-○->◖)+◗->○
+MATCH path=(a)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path",24,15,false
+ALT 🎯💰 QPP 20% retention,,"// ◗->○<-◖
+MATCH (last_tx)-[r_to:TO]->(a:Account)<-[r_from:FROM]-(first_tx)
+// ◖
+//  (◗<-○->◖)+
+// ◗
+MATCH path=(last_tx)-[r_to]->(a)<-[r_from]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path",25,15,false
 🪡 short path needle,,"// Create all accounts
 MERGE (a1:Account {a_id: 1})
 MERGE (a2:Account {a_id: 2})
@@ -528,7 +528,7 @@ RETURN ""Dropped "" + graphName;",42,40,false
     SET HOME DATABASE neo4j;
 CREATE ROLE data_science IF NOT EXISTS AS COPY OF anti_fraud;
 GRANT ROLE data_science TO Daniela;",43,40,false
-🔬 Project monopartire into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
+🔬 Project monopartite into memory,,"MATCH (source:Account)<-[:FROM]-(t:Transaction)-[:TO]->(target:Account)
 WITH gds.graph.project(
   'monopartite_account_to_account',
   source,
@@ -555,3 +555,18 @@ UNWIND range(1,length) AS ix
 MERGE (a:Account {a_id:""_""+toString(ix)})
 MERGE (b:Account {a_id:""_""+toString(CASE (ix+1)%length WHEN  0 THEN length ELSE (ix+1)%length END)})
 CREATE (a)<-[:FROM]-(:Transaction {test:true, amount: (1000*length)-ix, date: datetime()-duration({days: length - ix})})-[:TO]->(b);",47,40,false
+"🏎️ Enable // Runtime ",,"CALL dbms.setConfigValue('internal.cypher.parallel_runtime_support','ALL')",48,15,false
+🏎️ 🎯 // QPP 20% retention,,"CYPHER runtime=parallel
+// ◗->○<-◖
+MATCH (last_tx)-[r_to:TO]->(a:Account)<-[r_from:FROM]-(first_tx)
+// ◖
+//  (◗<-○->◖)+
+// ◗
+MATCH path=(last_tx)-[r_to]->(a)<-[r_from]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path",49,15,false

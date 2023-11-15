@@ -453,6 +453,34 @@ We can now run our query with no guardrail against 100K+ relationships.
 
 > "Oops... I guess you're right. There is still work to do."
 
+## Runtime
+
+> "Neo4j has just launched a new parallel runtime! Let's try it."
+
+
+We can enable parallel runtime (not available on free Aura tier).
+
+```cypher
+CALL dbms.setConfigValue('internal.cypher.parallel_runtime_support','ALL')
+```
+
+And just prepend `CYPHER runtime=parallel` to your query:
+
+```cypher
+CYPHER runtime=parallel
+MATCH (a:Account)
+// ○<-◖(◗<-○->◖)+◗->○
+MATCH path=(a)<-[:FROM]-(first_tx)
+    ((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+        WHERE tx_i.date < tx_j.date
+        AND tx_i.amount >= tx_j.amount >= 0.80 * tx_i.amount
+    )+
+    (last_tx)-[:TO]->(a)
+WHERE COUNT { WITH a, a_i UNWIND [a] + a_i AS b RETURN DISTINCT b } = size([a] + a_i)
+RETURN path
+```
+
+
 ## Third sprint - Role-Based Access-Control
 
 ### Environment
