@@ -6,7 +6,7 @@
 
 ### User Interface
 
-For a seamless experience, this training should be done using [Neo4j Workspace](https://workspace-preview.neo4j.io/). Workspace can be used with any Aura, Sandbox or Desktop instance.
+For a seamless experience, this training should be done using [Neo4j Workspace](https://workspace.neo4j.io/). Workspace can be used with any Aura, Sandbox or Desktop instance.
 
 ### Instance
 
@@ -25,7 +25,7 @@ Install Neo4j Desktop and create a Neo4j 5.9+ database.
 - APOC and GDS plugin should be installed,
 - This setting file line must not be commented:
 `dbms.security.allow_csv_import_from_file_urls=true`
-- Use `neo4j` schema to connect to `localhost` from [workspace](https://workspace-preview.neo4j.io/).
+- Use `neo4j` schema to connect to `localhost` from [workspace](https://workspace.neo4j.io/).
 ![connect workspace to local db](../assets/images/workspace_connection.png)
 
 #### Alternative 3 - Neo4j Sandbox
@@ -34,7 +34,7 @@ A [Blank Sandbox](http://sandbox.neo4j.com) is convenient for the whole training
 
 ### Queries
 
-Queries can be copied from the tutorial to [workspace](https://workspace-preview.neo4j.io/) UI.
+Queries can be copied from the tutorial to [workspace](https://workspace.neo4j.io/) UI.
 
 Alternatively to the copy/paste approach, you'll have a better experience downloading this workspace [script](./queries_for_aura_workspace.csv) and importing it to the workspace bookmarks sections.
 
@@ -226,7 +226,7 @@ RETURN path
 
 Our queries runs perfectly fine on our sample data but our developper has noticed some limitations :
 
-> "I've made some tests on a more realistic [dataset](../data_importer_schema_with_data/importMonopartite10Kaccs100Ktxs.zip) (I've imported it seemlessly with Aura workspace's [data-importer](https://workspace-preview.neo4j.io/workspace/import) - just *open model (with data)* from three-dot menu). And... well... I'm afraid our query doesn't scale well. By the way I even had to put a limit on the length of the path because when there was none, the query was running forever (or until a memory allocation error)."
+> "I've made some tests on a more realistic [dataset](../data_importer_schema_with_data/importMonopartite10Kaccs100Ktxs.zip) (I've imported it seemlessly with Aura workspace's [data-importer](https://workspace.neo4j.io/workspace/import) - just *open model (with data)* from three-dot menu). And... well... I'm afraid our query doesn't scale well. By the way I even had to put a limit on the length of the path because when there was none, the query was running forever (or until a memory allocation error)."
 
 Some other developer :
 
@@ -421,7 +421,7 @@ IN TRANSACTIONS OF 100 ROWS
 ```
 #### Ingestion
 
-And import a more realistic [dataset](../data_importer_schema_with_data/importBipartite10Kaccs100Ktxs.zip) with the [data-importer](https://workspace-preview.neo4j.io/workspace/import).
+And import a more realistic [dataset](../data_importer_schema_with_data/importBipartite10Kaccs100Ktxs.zip) with the [data-importer](https://workspace.neo4j.io/workspace/import).
 
 Alternatively, we can ingest the database by running [this script](../cypher_import_from_browser/cypher_script_with_data_bipartite/neo4j_importer_cypher_script.cypher) from the workspace query tab.
 
