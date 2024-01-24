@@ -74,17 +74,25 @@ MERGE (a1:Account {a_id: "1"})
 MERGE (a2:Account {a_id: "2"})
 MERGE (a3:Account {a_id: "3"})
 MERGE (a4:Account {a_id: "4"})
+MERGE (a5:Account {a_id: "5"})
+MERGE (a6:Account {a_id: "6"})
+MERGE (a7:Account {a_id: "7"})
+MERGE (a8:Account {a_id: "8"})
 
 
 // Create relationships between accounts
-CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})}]->(a2)
+CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})}]->(a2)
 CREATE (a2)-[:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]->(a3)
 CREATE (a3)-[:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]->(a4)
 CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1)
 CREATE (a2)-[:TRANSACTION {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})}]->(a3)
 CREATE (a3)-[:TRANSACTION {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]->(a4)
-CREATE (a4)-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]->(a1)
-CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a2)
+CREATE (a4)<-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]-(a1)
+CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a5)
+CREATE (a5)-[:TRANSACTION {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})}]->(a6)
+CREATE (a2)-[:TRANSACTION {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})}]->(a7)
+CREATE (a8)-[:TRANSACTION {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})}]->(a7)
+CREATE (a4)-[:TRANSACTION {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})}]->(a7)
 ```
 
 Let's look at the resulting schema.
