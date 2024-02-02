@@ -178,8 +178,8 @@ RETURN path
 
 ```cypher
 // we can play around with the nodes in the path
-MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
-WITH nodes(path) as n
+MATCH path=(a:Account{a_id:"2"})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
+WITH distinct nodes(path) as n
 RETURN n;
 
 ```
@@ -187,8 +187,9 @@ We can return nodes in separate rows
 
 ```cypher
 // we can play around with the nodes in the path
-MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
-UNWIND nodes(path) as n
+MATCH path=(a:Account{a_id:"2"})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
+WITH distinct nodes(path) as nodos
+UNWIND nodos as n
 RETURN n;
 
 ```
