@@ -286,15 +286,6 @@ MERGE (a8:Account {a_id: 8})
 
 
 // Create relationships between accounts
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a2)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a3)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:TO]->(a4)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: "gbp", date: datetime()})-[:TO]->(a1)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gdp", date: datetime()-duration({days: 6})})-[:TO]->(a3)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gdp", date: datetime()-duration({days: 5})})-[:TO]->(a4)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gdp", date: datetime()-duration({days: 4})})-[:TO]->(a1)
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gdp", date: datetime()})-[:TO]->(a2)
-
 CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})}]-[:TO]->(a2)
 CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]-[:TO]->(a3)
 CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]-[:TO]->(a4)
