@@ -176,26 +176,21 @@ RETURN path
 - We can [aggregate](https://neo4j.com/docs/cypher-cheat-sheet/5/auradb-enterprise/#_aggregating_functions) and count with `count()`.
 - `GROUP BY` is implicit in cypher. This is not a key-word.
 
-We can build a query that filters the path by counting the number of nodes `c_nodes` and comparing it to the number of distinct nodes `c_unique_nodes`.
-
 ```cypher
-// Identify simple transaction ring
+// we can play around with the nodes in the path
 MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
-UNWIND nodes(path) AS n
-WITH path, size(nodes(path)) AS c_nodes, n
-WITH DISTINCT path, c_nodes, n
-WITH path, c_nodes, count(n) AS c_unique_nodes
-WHERE c_nodes = c_unique_nodes + 1
-RETURN path
-```
+WITH nodes(path) as n
+RETURN n;
 
-We must admit this query is not concise and, worst, not easily readable. We can use [`APOC`](https://neo4j.com/labs/apoc/5/), Neo4j's standard library to get something more human-friendly.
+```
+We can return nodes in separate rows
 
 ```cypher
-// No duplicate
-MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
-WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
-RETURN path
+// we can play around with the nodes in the path
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
+UNWIND nodes(path) as n
+RETURN n;
+
 ```
 
 ### Finding a *non-node-repeating* cycle with consistent dates
