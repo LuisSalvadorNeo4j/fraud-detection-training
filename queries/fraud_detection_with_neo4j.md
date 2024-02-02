@@ -279,6 +279,10 @@ MERGE (a1:Account {a_id: 1})
 MERGE (a2:Account {a_id: 2})
 MERGE (a3:Account {a_id: 3})
 MERGE (a4:Account {a_id: 4})
+MERGE (a5:Account {a_id: 5})
+MERGE (a6:Account {a_id: 6})
+MERGE (a7:Account {a_id: 7})
+MERGE (a8:Account {a_id: 8})
 
 
 // Create relationships between accounts
@@ -290,6 +294,19 @@ CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gdp", date: datetime
 CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gdp", date: datetime()-duration({days: 5})})-[:TO]->(a4)
 CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gdp", date: datetime()-duration({days: 4})})-[:TO]->(a1)
 CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gdp", date: datetime()})-[:TO]->(a2)
+
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})}]-[:TO]->(a2)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: "gbp", date: datetime()}]-[:TO]->(a1)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})}]-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]-[:TO]->(a1)
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gbp", date: datetime()}]-[:TO]->(a5)
+CREATE (a5)<-[:FROM]-(:Transaction {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})}]-[:TO]->(a6)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})}]-[:TO]->(a7)
+CREATE (a8)<-[:FROM]-(:Transaction {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})}]-[:TO]->(a7)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})}]-[:TO]->(a7)
 ```
 
 Let's look at the resulting schema.
