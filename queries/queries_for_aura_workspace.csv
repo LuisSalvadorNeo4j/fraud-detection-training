@@ -22,21 +22,30 @@ MATCH (n)
 CALL {WITH n DETACH DELETE n}
 IN TRANSACTIONS OF 100 ROWS",2,1,false
 ⬇ load sample data,,"// Create all accounts
-MERGE (a1:Account {a_id: ""1""})
-MERGE (a2:Account {a_id: ""2""})
-MERGE (a3:Account {a_id: ""3""})
-MERGE (a4:Account {a_id: ""4""})
+// Create all accounts
+MERGE (a1:Account {a_id: "1"})
+MERGE (a2:Account {a_id: "2"})
+MERGE (a3:Account {a_id: "3"})
+MERGE (a4:Account {a_id: "4"})
+MERGE (a5:Account {a_id: "5"})
+MERGE (a6:Account {a_id: "6"})
+MERGE (a7:Account {a_id: "7"})
+MERGE (a8:Account {a_id: "8"})
 
 
 // Create relationships between accounts
-CREATE (a1)-[:TRANSACTION {amount: 1000, currency: ""gbp"", date: datetime()-duration({days: 3})}]->(a2)
-CREATE (a2)-[:TRANSACTION {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})}]->(a3)
-CREATE (a3)-[:TRANSACTION {amount: 810, currency: ""gbp"", date: datetime()-duration({days: 1})}]->(a4)
-CREATE (a4)-[:TRANSACTION {amount: 729, currency: ""gbp"", date: datetime()}]->(a1)
-CREATE (a2)-[:TRANSACTION {amount: 700, currency: ""gbp"", date: datetime()-duration({days: 6})}]->(a3)
-CREATE (a3)-[:TRANSACTION {amount: 978, currency: ""gbp"", date: datetime()-duration({days: 5})}]->(a4)
-CREATE (a4)-[:TRANSACTION {amount: 210, currency: ""gbp"", date: datetime()-duration({days: 4})}]->(a1)
-CREATE (a1)-[:TRANSACTION {amount: 29, currency: ""gbp"", date: datetime()}]->(a2)",3,1,false
+CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})}]->(a2)
+CREATE (a2)-[:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1)
+CREATE (a2)-[:TRANSACTION {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]->(a4)
+CREATE (a4)<-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]-(a1)
+CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a5)
+CREATE (a5)-[:TRANSACTION {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})}]->(a6)
+CREATE (a2)-[:TRANSACTION {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})}]->(a7)
+CREATE (a8)-[:TRANSACTION {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})}]->(a7)
+CREATE (a4)-[:TRANSACTION {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})}]->(a7)
 👀 show schema,,CALL db.schema.visualization(),4,1,false
 🟣 Get constrained node,,"// Get constrained node
 MATCH (n:Account {a_id:""2""})
@@ -48,21 +57,18 @@ RETURN a, tx, n",6,1,false
 MATCH path = (a:Account {a_id:""2""})-[tx:TRANSACTION*0..3]->(n)
 RETURN path
 LIMIT 10",7,1,false
+🟣→🟣→🟣 Playing with paths,,"// Playing around with paths
+MATCH path=(a:Account{a_id:"2"})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
+WITH distinct nodes(path) as n",7,1,false
+🟣→🟣→🟣 Playing with paths - UNWIND,,"/// we can play around with the nodes in the path
+MATCH path=(a:Account{a_id:"2"})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
+WITH distinct nodes(path) as nodos
+UNWIND nodos as n
+RETURN n;",7,1,false
+RETURN n;
 ⭕️ Identify simple transaction ring,,"// Identify simple transaction ring
 MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
 RETURN path",8,1,false
-👯 no duplicate pure cypher,,"// no duplicate pure cypher
-MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
-UNWIND nodes(path) AS n
-WITH path, size(nodes(path)) AS c_nodes, n
-WITH DISTINCT path, c_nodes, n
-WITH path, c_nodes, count(n) AS c_unique_nodes
-WHERE c_nodes = c_unique_nodes + 1
-RETURN path",9,1,false
-👯 No duplicate,,"// no duplicate
-MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
-WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
-RETURN path",10,1,false
 🗓️ Monotonic dates,,"// Monotonic dates
 MATCH path=(a:Account)-[tx:TRANSACTION*2..6]->(a)
 WHERE size(apoc.coll.toSet(nodes(path))) = size(nodes(path)) - 1
@@ -205,17 +211,26 @@ MERGE (a1:Account {a_id: 1})
 MERGE (a2:Account {a_id: 2})
 MERGE (a3:Account {a_id: 3})
 MERGE (a4:Account {a_id: 4})
+MERGE (a5:Account {a_id: 5})
+MERGE (a6:Account {a_id: 6})
+MERGE (a7:Account {a_id: 7})
+MERGE (a8:Account {a_id: 8})
 
 
 // Create relationships between accounts
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: ""gbp"", date: datetime()-duration({days: 3})})-[:TO]->(a2)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})})-[:TO]->(a3)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: ""gbp"", date: datetime()-duration({days: 1})})-[:TO]->(a4)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: ""gbp"", date: datetime()})-[:TO]->(a1)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: ""gdp"", date: datetime()-duration({days: 6})})-[:TO]->(a3)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: ""gdp"", date: datetime()-duration({days: 5})})-[:TO]->(a4)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: ""gdp"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gdp"", date: datetime()})-[:TO]->(a2)",17,15,false
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})})-[:TO]->(a2)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a2)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: "gbp", date: datetime()})-[:TO]->(a1)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})})-[:TO]->(a1)
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gbp", date: datetime()})-[:TO]->(a5)
+CREATE (a5)<-[:FROM]-(:Transaction {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})})-[:TO]->(a6)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})})-[:TO]->(a7)
+CREATE (a8)<-[:FROM]-(:Transaction {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})})-[:TO]->(a7)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a7)
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
