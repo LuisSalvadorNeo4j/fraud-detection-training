@@ -45,7 +45,7 @@ CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a5)
 CREATE (a5)-[:TRANSACTION {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})}]->(a6)
 CREATE (a2)-[:TRANSACTION {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})}]->(a7)
 CREATE (a8)-[:TRANSACTION {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})}]->(a7)
-CREATE (a4)-[:TRANSACTION {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})}]->(a7)
+CREATE (a4)-[:TRANSACTION {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})}]->(a7)",3,1,false
 👀 show schema,,CALL db.schema.visualization(),4,1,false
 🟣 Get constrained node,,"// Get constrained node
 MATCH (n:Account {a_id:""2""})
@@ -229,7 +229,7 @@ CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gbp", date: datetime(
 CREATE (a5)<-[:FROM]-(:Transaction {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})})-[:TO]->(a6)
 CREATE (a2)<-[:FROM]-(:Transaction {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})})-[:TO]->(a7)
 CREATE (a8)<-[:FROM]-(:Transaction {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})})-[:TO]->(a7)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a7)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a7)",17,15,false
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
