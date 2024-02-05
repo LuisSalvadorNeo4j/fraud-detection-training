@@ -23,29 +23,29 @@ CALL {WITH n DETACH DELETE n}
 IN TRANSACTIONS OF 100 ROWS",2,1,false
 ⬇ load sample data,,"// Create all accounts
 // Create all accounts
-MERGE (a1:Account {a_id: "1"})
-MERGE (a2:Account {a_id: "2"})
-MERGE (a3:Account {a_id: "3"})
-MERGE (a4:Account {a_id: "4"})
-MERGE (a5:Account {a_id: "5"})
-MERGE (a6:Account {a_id: "6"})
-MERGE (a7:Account {a_id: "7"})
-MERGE (a8:Account {a_id: "8"})
+MERGE (a1:Account {a_id: ""1""})
+MERGE (a2:Account {a_id: ""2""})
+MERGE (a3:Account {a_id: ""3""})
+MERGE (a4:Account {a_id: ""4""})
+MERGE (a5:Account {a_id: ""5""})
+MERGE (a6:Account {a_id: ""6""})
+MERGE (a7:Account {a_id: ""7""})
+MERGE (a8:Account {a_id: ""8""})
 
 
 // Create relationships between accounts
-CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})}]->(a2)
-CREATE (a2)-[:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]->(a3)
-CREATE (a3)-[:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]->(a4)
-CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1)
-CREATE (a2)-[:TRANSACTION {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})}]->(a3)
-CREATE (a3)-[:TRANSACTION {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})}]->(a4)
-CREATE (a4)<-[:TRANSACTION {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})}]-(a1)
-CREATE (a1)-[:TRANSACTION {amount: 29, currency: "gbp", date: datetime()}]->(a5)
-CREATE (a5)-[:TRANSACTION {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})}]->(a6)
-CREATE (a2)-[:TRANSACTION {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})}]->(a7)
-CREATE (a8)-[:TRANSACTION {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})}]->(a7)
-CREATE (a4)-[:TRANSACTION {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})}]->(a7)",3,1,false
+CREATE (a1)-[:TRANSACTION {amount: 1000, currency: ""gpb"", date: datetime()-duration({days: 3})}]->(a2)
+CREATE (a2)-[:TRANSACTION {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 810, currency: ""gbp"", date: datetime()-duration({days: 1})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 729, currency: ""gbp"", date: datetime()}]->(a1)
+CREATE (a2)-[:TRANSACTION {amount: 700, currency: ""gbp"", date: datetime()-duration({days: 6})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 978, currency: ""gbp"", date: datetime()-duration({days: 5})}]->(a4)
+CREATE (a4)<-[:TRANSACTION {amount: 210, currency: ""gbp"", date: datetime()-duration({days: 4})}]-(a1)
+CREATE (a1)-[:TRANSACTION {amount: 29, currency: ""gbp"", date: datetime()}]->(a5)
+CREATE (a5)-[:TRANSACTION {amount: 45, currency: ""gbp"", date: datetime()-duration({days: 7})}]->(a6)
+CREATE (a2)-[:TRANSACTION {amount: 400, currency: ""gbp"", date: datetime()-duration({days: 5})}]->(a7)
+CREATE (a8)-[:TRANSACTION {amount: 500, currency: ""gbp"", date: datetime()-duration({days: 4})}]->(a7)
+CREATE (a4)-[:TRANSACTION {amount: 550, currency: ""gbp"", date: datetime()-duration({days: 3})}]->(a7)",3,1,false
 👀 show schema,,CALL db.schema.visualization(),4,1,false
 🟣 Get constrained node,,"// Get constrained node
 MATCH (n:Account {a_id:""2""})
@@ -217,19 +217,19 @@ MERGE (a8:Account {a_id: 8})
 
 
 // Create relationships between accounts
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: "gpb", date: datetime()-duration({days: 3})})-[:TO]->(a2)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a3)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a2)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:TO]->(a4)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: "gbp", date: datetime()})-[:TO]->(a1)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: "gbp", date: datetime()-duration({days: 6})})-[:TO]->(a3)
-CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: "gbp", date: datetime()-duration({days: 5})})-[:TO]->(a4)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: "gbp", date: datetime()-duration({days: 4})})-[:TO]->(a1)
-CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: "gbp", date: datetime()})-[:TO]->(a5)
-CREATE (a5)<-[:FROM]-(:Transaction {amount: 45, currency: "gbp", date: datetime()-duration({days: 7})})-[:TO]->(a6)
-CREATE (a2)<-[:FROM]-(:Transaction {amount: 400, currency: "gbp", date: datetime()-duration({days: 5})})-[:TO]->(a7)
-CREATE (a8)<-[:FROM]-(:Transaction {amount: 500, currency: "gbp", date: datetime()-duration({days: 4})})-[:TO]->(a7)
-CREATE (a4)<-[:FROM]-(:Transaction {amount: 550, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a7)",17,15,false
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 1000, currency: ""gpb"", date: datetime()-duration({days: 3})})-[:TO]->(a2)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 900, currency: ""gbp"", date: datetime()-duration({days: 2})})-[:TO]->(a2)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 810, currency: ""gbp"", date: datetime()-duration({days: 1})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 729, currency: ""gbp"", date: datetime()})-[:TO]->(a1)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 700, currency: ""gbp"", date: datetime()-duration({days: 6})})-[:TO]->(a3)
+CREATE (a3)<-[:FROM]-(:Transaction {amount: 978, currency: ""gbp"", date: datetime()-duration({days: 5})})-[:TO]->(a4)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 210, currency: ""gbp"", date: datetime()-duration({days: 4})})-[:TO]->(a1)
+CREATE (a1)<-[:FROM]-(:Transaction {amount: 29, currency: ""gbp"", date: datetime()})-[:TO]->(a5)
+CREATE (a5)<-[:FROM]-(:Transaction {amount: 45, currency: ""gbp"", date: datetime()-duration({days: 7})})-[:TO]->(a6)
+CREATE (a2)<-[:FROM]-(:Transaction {amount: 400, currency: ""gbp"", date: datetime()-duration({days: 5})})-[:TO]->(a7)
+CREATE (a8)<-[:FROM]-(:Transaction {amount: 500, currency: ""gbp"", date: datetime()-duration({days: 4})})-[:TO]->(a7)
+CREATE (a4)<-[:FROM]-(:Transaction {amount: 550, currency: ""gbp"", date: datetime()-duration({days: 3})})-[:TO]->(a7)",17,15,false
 ⬇ ingest 1000 rels dataset,,":param  file_path_root => 'https://raw.githubusercontent.com/halftermeyer/fraud-detection-training/main/data/data_csv/small/';
 :param file_0 => 'accounts.csv';
 :param file_1 => 'txs.csv';
