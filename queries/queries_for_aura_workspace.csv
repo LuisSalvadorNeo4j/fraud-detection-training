@@ -58,10 +58,10 @@ MATCH path = (a:Account {a_id:""2""})-[tx:TRANSACTION*0..3]->(n)
 RETURN path
 LIMIT 10",7,1,false
 🟣→🟣→🟣 Playing with paths,,"// Playing around with paths
-MATCH path=(a:Account{a_id:"2"})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
+MATCH path=(a:Account{a_id:""2""})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
 WITH distinct nodes(path) as n",8,1,false
 🟣→🟣→🟣 Playing with paths - UNWIND,,"// we can play around with the nodes in the path
-MATCH path=(a:Account{a_id:"2"})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
+MATCH path=(a:Account{a_id:""2""})-[:TRANSACTION]->(b)-[:TRANSACTION]->(c)
 WITH distinct nodes(path) as nodos
 UNWIND nodos as n
 RETURN n",9,1,false
